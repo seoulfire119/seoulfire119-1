@@ -1451,7 +1451,7 @@
         /* 사상자 현황 모달 전용 스타일 */
         .modal-casualty-content {
             background: #ffffff;
-            width: min(880px, 98vw);
+            width: min(960px, 98vw);
             height: 90vh;
             max-height: 90vh;
             border-radius: 14px;
@@ -1465,6 +1465,7 @@
             flex: 1;
             overflow-y: auto;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             background: #ffffff;
             border: 1.5px solid #0f172a;
             min-height: 0;
@@ -1472,7 +1473,7 @@
         }
         .casualty-table {
             width: 100%;
-            min-width: 680px;
+            min-width: 900px;
             border-collapse: collapse;
             font-family: 'Pretendard', sans-serif;
             text-align: center;
@@ -1563,12 +1564,12 @@
         }
         .cas-tbl-input {
             width: 100%;
-            height: 26px;
+            height: 32px;
             border: 1px solid transparent;
             outline: none;
             background: transparent;
             text-align: center;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             color: #0f172a;
             padding: 1px 2px;
@@ -2466,7 +2467,7 @@
                             <button id="removeCasualtyRowBtn" type="button" style="background: #475569; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 3px;">
                                 <span>- 삭제</span>
                             </button>
-                            <button id="saveCasualtyImageBtn" type="button" style="background: #2563eb; color: #ffffff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);">
+                            <button id="saveCasualtyImageBtn" type="button" onclick="saveCasualtyImage()" style="background: #2563eb; color: #ffffff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);">
                                 <span>📷 그림파일로 저장</span>
                             </button>
                             <button id="casualtyStatusCloseXBtn" type="button" style="background: none; border: none; color: #94a3b8; font-size: 24px; font-weight: 900; line-height: 1; cursor: pointer; margin-left: 2px;">&times;</button>
@@ -2488,24 +2489,24 @@
                         <table class="casualty-table" id="casualtyMainTable">
                             <thead>
                                 <tr>
-                                    <th rowspan="2" class="th-cas-no" style="width: 36px;">연번</th>
-                                    <th rowspan="2" style="width: 65px;">성명<br><span style="font-size: 10px; font-weight: 600;">(국적)</span></th>
-                                    <th rowspan="2" style="width: 80px;">성별/연령</th>
-                                    <th rowspan="2" style="width: 85px;">발견<br>장소</th>
+                                    <th rowspan="2" class="th-cas-no" style="width: 36px; min-width: 36px;">연번</th>
+                                    <th rowspan="2" style="width: 80px; min-width: 80px;">성명<br><span style="font-size: 10px; font-weight: 600;">(국적)</span></th>
+                                    <th rowspan="2" style="width: 85px; min-width: 85px;">성별/연령</th>
+                                    <th rowspan="2" style="width: 105px; min-width: 105px;">발견<br>장소</th>
                                     <th colspan="4" style="background: #e2e8f0;">중증도 분류<br><span style="font-size: 9.5px; font-weight: 600;">(해당란 ✓)</span></th>
-                                    <th rowspan="2" style="width: 110px;">주증상<br><span style="font-size: 10px; font-weight: 600;">(손상원인)</span></th>
-                                    <th colspan="2" style="width: 78px; background: #e2e8f0;">이송여부</th>
-                                    <th rowspan="2" style="width: 95px;">이송병원</th>
-                                    <th rowspan="2" style="width: 85px;">비고</th>
-                                    <th rowspan="2" class="cas-no-print" style="width: 34px;">삭제</th>
+                                    <th rowspan="2" style="width: 135px; min-width: 135px;">주증상<br><span style="font-size: 10px; font-weight: 600;">(손상원인)</span></th>
+                                    <th colspan="2" style="width: 82px; background: #e2e8f0;">이송여부</th>
+                                    <th rowspan="2" style="width: 115px; min-width: 115px;">이송병원</th>
+                                    <th rowspan="2" style="width: 100px; min-width: 100px;">비고</th>
+                                    <th rowspan="2" class="cas-no-print" style="width: 34px; min-width: 34px;">삭제</th>
                                 </tr>
                                 <tr>
-                                    <th class="th-sev-critical" style="width: 32px; padding: 3px 0; font-size: 11px;">긴<br>급</th>
-                                    <th class="th-sev-urgent" style="width: 32px; padding: 3px 0; font-size: 11px;">응<br>급</th>
-                                    <th class="th-sev-nonurgent" style="width: 34px; padding: 3px 0; font-size: 11px;">비<br>응<br>급</th>
-                                    <th class="th-sev-dead" style="width: 32px; padding: 3px 0; font-size: 11px;">사<br>망</th>
-                                    <th style="width: 38px; padding: 3px 0; font-size: 11px;">이송</th>
-                                    <th style="width: 40px; padding: 3px 0; font-size: 11px;">미이송</th>
+                                    <th class="th-sev-critical" style="width: 34px; min-width: 34px; padding: 4px 0; font-size: 11px;">긴<br>급</th>
+                                    <th class="th-sev-urgent" style="width: 34px; min-width: 34px; padding: 4px 0; font-size: 11px;">응<br>급</th>
+                                    <th class="th-sev-nonurgent" style="width: 34px; min-width: 34px; padding: 4px 0; font-size: 11px;">비<br>응<br>급</th>
+                                    <th class="th-sev-dead" style="width: 34px; min-width: 34px; padding: 4px 0; font-size: 11px;">사<br>망</th>
+                                    <th style="width: 40px; min-width: 40px; padding: 4px 0; font-size: 11px;">이송</th>
+                                    <th style="width: 42px; min-width: 42px; padding: 4px 0; font-size: 11px;">미이송</th>
                                 </tr>
                             </thead>
                             <tbody id="casualtyTableBody">
@@ -4586,41 +4587,37 @@
 
                 function maskKoreanName(val) {
             if (!val) return '';
-            const clean = val.trim();
-            if (!clean) return '';
+            const raw = String(val).trim();
+            if (!raw) return '';
 
-            // 특수문자나 빈칸을 제외한 순수 문자 추출
-            const base = clean.replace(/[*○ㅇO0.\s]/g, '');
-
-            // 1) 1글자만 작성되었거나 성만 입력된 경우 (예: "이", "김", "박", "이**")
-            if (base.length === 1) {
-                return `${base}○○`;
+            // 1. 국적 및 부가정보 접미사 분리 (예: (중국), [중국], /중국 등)
+            let namePart = raw;
+            let suffixPart = '';
+            const suffixMatch = raw.match(/^([^(<\[/]+)(\s*[(<\[/].*)$/);
+            if (suffixMatch) {
+                namePart = suffixMatch[1].trim();
+                suffixPart = suffixMatch[2]; // 공백 및 괄호/슬래시 형태 그대로 유지
             }
 
-            // 2) 2글자 (예: "강호") -> "강○"
-            if (clean.length === 2 && !clean.includes('○') && !clean.includes('*')) {
-                return `${clean[0]}○`;
+            // 2. 영어 이름 처리: 영문 알파벳이 포함되어 있고 한글이 없으면 원본 그대로 노출
+            if (/[a-zA-Z]/.test(namePart) && !/[가-힣]/.test(namePart)) {
+                return raw;
             }
 
-            // 3) 3글자 (예: "이재오") -> 가운데 마스킹: "이○오"
-            if (clean.length === 3) {
-                return `${clean[0]}○${clean[2]}`;
+            // 3. 한글 이름 마스킹 (가운데 글자를 영문 대문자 'O'로 마스킹)
+            let maskedName = namePart;
+            if (namePart.length === 2) {
+                // 2글자 (예: 강호 -> 강O)
+                maskedName = namePart[0] + 'O';
+            } else if (namePart.length === 3) {
+                // 3글자 (예: 이재오 -> 이O오)
+                maskedName = namePart[0] + 'O' + namePart[2];
+            } else if (namePart.length >= 4) {
+                // 4글자 이상 (예: 산다라박 -> 산O라박, 남궁민수 -> 남O민수)
+                maskedName = namePart[0] + 'O' + namePart.slice(2);
             }
 
-            // 4) 4글자 (예: "남궁민수") -> "남○○수"
-            if (clean.length === 4) {
-                return `${clean[0]}○○${clean[3]}`;
-            }
-
-            // 5) 5글자 이상
-            if (clean.length > 4) {
-                const first = clean.substring(0, 1);
-                const last = clean.substring(clean.length - 1);
-                const midCount = clean.length - 2;
-                return `${first}${'○'.repeat(midCount)}${last}`;
-            }
-
-            return clean;
+            return maskedName + suffixPart;
         }
 
         function updateGenderInputStyle(input, val) {
@@ -4825,99 +4822,98 @@
 
 
 
-            if (saveCasualtyImageBtn) {
-                saveCasualtyImageBtn.addEventListener('click', async () => {
-                    const target = document.getElementById('casualty-capture-area');
-                    if (!target) return;
+            async function saveCasualtyImage() {
+            const target = document.getElementById('casualty-capture-area');
+            if (!target) return;
 
-                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
-                        document.activeElement.blur();
-                    }
-                    showToast('사상자 현황표를 그림 파일로 생성 중입니다...');
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            showToast('사상자 현황표를 그림 파일로 생성 중입니다...');
 
-                    try {
-                        if (typeof html2canvas === 'undefined') throw new Error('html2canvas unavailable');
+            try {
+                if (typeof html2canvas === 'undefined') throw new Error('html2canvas unavailable');
 
-                        const canvas = await html2canvas(target, {
-                            scale: 2,
-                            backgroundColor: '#ffffff',
-                            useCORS: true,
-                            logging: false,
-                            scrollY: 0,
-                            scrollX: 0,
-                            onclone: (clonedDoc) => {
-                                const cModal = clonedDoc.querySelector('.modal-casualty-content');
-                                const cTarget = clonedDoc.getElementById('casualty-capture-area');
-                                const cWrap = clonedDoc.querySelector('.casualty-table-wrap');
-                                const cTable = clonedDoc.getElementById('casualtyMainTable');
+                const canvas = await html2canvas(target, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false,
+                    scrollY: 0,
+                    scrollX: 0,
+                    onclone: (clonedDoc) => {
+                        const cModal = clonedDoc.querySelector('.modal-casualty-content');
+                        const cTarget = clonedDoc.getElementById('casualty-capture-area');
+                        const cWrap = clonedDoc.querySelector('.casualty-table-wrap');
+                        const cTable = clonedDoc.getElementById('casualtyMainTable');
 
-                                if (cModal) {
-                                    cModal.style.width = 'auto';
-                                    cModal.style.maxWidth = 'none';
-                                    cModal.style.height = 'auto';
-                                    cModal.style.maxHeight = 'none';
-                                    cModal.style.overflow = 'visible';
-                                }
-                                if (cTarget) {
-                                    cTarget.style.width = '800px';
-                                    cTarget.style.maxWidth = '800px';
-                                    cTarget.style.minWidth = '800px';
-                                    cTarget.style.height = 'auto';
-                                    cTarget.style.maxHeight = 'none';
-                                    cTarget.style.overflow = 'visible';
-                                    cTarget.style.padding = '16px 14px';
-                                    cTarget.style.background = '#ffffff';
-                                }
-                                if (cWrap) {
-                                    cWrap.style.width = '100%';
-                                    cWrap.style.height = 'auto';
-                                    cWrap.style.maxHeight = 'none';
-                                    cWrap.style.overflow = 'visible';
-                                    cWrap.style.border = '1.5px solid #0f172a';
-                                }
-                                if (cTable) {
-                                    cTable.style.width = '100%';
-                                    cTable.style.minWidth = '0';
-                                    cTable.style.maxWidth = '100%';
-                                }
+                        if (cModal) {
+                            cModal.style.width = 'auto';
+                            cModal.style.maxWidth = 'none';
+                            cModal.style.height = 'auto';
+                            cModal.style.maxHeight = 'none';
+                            cModal.style.overflow = 'visible';
+                        }
+                        if (cTarget) {
+                            cTarget.style.width = '940px';
+                            cTarget.style.maxWidth = '940px';
+                            cTarget.style.minWidth = '940px';
+                            cTarget.style.height = 'auto';
+                            cTarget.style.maxHeight = 'none';
+                            cTarget.style.overflow = 'visible';
+                            cTarget.style.padding = '16px 14px';
+                            cTarget.style.background = '#ffffff';
+                        }
+                        if (cWrap) {
+                            cWrap.style.width = '100%';
+                            cWrap.style.height = 'auto';
+                            cWrap.style.maxHeight = 'none';
+                            cWrap.style.overflow = 'visible';
+                            cWrap.style.border = '1.5px solid #0f172a';
+                        }
+                        if (cTable) {
+                            cTable.style.width = '100%';
+                            cTable.style.minWidth = '0';
+                            cTable.style.maxWidth = '100%';
+                        }
 
-                                // 1. 화면 전용 삭제 열 제거 (표 본문 10개 행은 모두 그대로 유지)
-                                clonedDoc.querySelectorAll('.cas-no-print').forEach(el => el.remove());
+                        // 1. 화면 전용 삭제 열 제거
+                        clonedDoc.querySelectorAll('.cas-no-print').forEach(el => el.remove());
 
-                                // 2. input 요소를 깨끗한 텍스트 div로 치환하여 잘림 없이 인쇄급 고화질 렌더링
-                                clonedDoc.querySelectorAll('.cas-tbl-input').forEach(inp => {
-                                    const val = inp.value || '';
-                                    const div = clonedDoc.createElement('div');
-                                    div.textContent = val;
-                                    div.style.cssText = 'width: 100%; min-height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; text-align: center; color: ' + (inp.style.color || '#0f172a') + ';';
-                                    inp.parentNode.replaceChild(div, inp);
-                                });
-                            }
+                        // 2. input 요소를 깨끗한 텍스트 div로 치환하여 인쇄급 고화질 렌더링
+                        clonedDoc.querySelectorAll('.cas-tbl-input').forEach(inp => {
+                            const val = inp.value || '';
+                            const div = clonedDoc.createElement('div');
+                            div.textContent = val;
+                            div.style.cssText = 'width: 100%; min-height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; text-align: center; color: ' + (inp.style.color || '#0f172a') + ';';
+                            inp.parentNode.replaceChild(div, inp);
                         });
-
-                        const now = new Date();
-                        const dStr = now.getFullYear() +
-                            String(now.getMonth() + 1).padStart(2, '0') +
-                            String(now.getDate()).padStart(2, '0') + '_' +
-                            String(now.getHours()).padStart(2, '0') +
-                            String(now.getMinutes()).padStart(2, '0');
-
-                        const fileName = `사상자_이송현황_${dStr}.png`;
-                        await saveCanvasToGalleryOrDownload(
-                            canvas,
-                            fileName,
-                            '사상자 현황표가 10번까지 잘림 없이 고화질 저장되었습니다.'
-                        );
-                    } catch (err) {
-                        console.error('Casualty image export failed:', err);
-                        showToast('그림 파일 저장에 실패했습니다.');
                     }
                 });
+
+                const now = new Date();
+                const dStr = now.getFullYear() +
+                    String(now.getMonth() + 1).padStart(2, '0') +
+                    String(now.getDate()).padStart(2, '0') + '_' +
+                    String(now.getHours()).padStart(2, '0') +
+                    String(now.getMinutes()).padStart(2, '0');
+
+                const fileName = `사상자_이송현황_${dStr}.png`;
+                await saveCanvasToMobileGallery(canvas, fileName);
+                showToast('사상자 현황표가 그림 파일로 저장되었습니다.');
+            } catch (err) {
+                console.error('Casualty image export failed:', err);
+                showToast('그림 파일 저장에 실패했습니다.');
             }
         }
-    
+        window.saveCasualtyImage = saveCasualtyImage;
 
-const saveFacilityImageBtn = document.getElementById('saveFacilityImageBtn');
+        if (saveCasualtyImageBtn) {
+            saveCasualtyImageBtn.addEventListener('click', saveCasualtyImage);
+        }
+    }
+
+    const saveFacilityImageBtn = document.getElementById('saveFacilityImageBtn');
         const facilitySearchForm = document.getElementById('facilitySearchForm');
         const facilitySearchInput = document.getElementById('facilitySearchInput');
         const FACILITY_SERVICE_KEY = "528B034D-79D9-47B4-BC0D-416247B94086";
