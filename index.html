@@ -4599,12 +4599,17 @@
                 suffixPart = suffixMatch[2]; // 공백 및 괄호/슬래시 형태 그대로 유지
             }
 
-            // 2. 영어 이름 처리: 영문 알파벳이 포함되어 있고 한글이 없으면 원본 그대로 노출
+            // 2. 영어 이름 처리: 영문 알파벳이 포함되어 있고 한글이 없으면 원본 그대로 노출 (예: John Doe, Smith 등)
             if (/[a-zA-Z]/.test(namePart) && !/[가-힣]/.test(namePart)) {
                 return raw;
             }
 
-            // 3. 한글 이름 마스킹 (가운데 글자를 영문 대문자 'O'로 마스킹)
+            // 3. 무명/신원미상 이름 처리: '무명', '미상'이 들어가는 경우 마스킹 없이 원본 그대로 표출 (예: 무명남, 무명녀, 무명인, 신원미상 등)
+            if (namePart.includes('무명') || namePart.includes('미상')) {
+                return raw;
+            }
+
+            // 4. 한글 이름 마스킹 (가운데 글자를 영문 대문자 'O'로 마스킹)
             let maskedName = namePart;
             if (namePart.length === 2) {
                 // 2글자 (예: 강호 -> 강O)
@@ -11849,11 +11854,21 @@
             if (typeof val === 'number') return val;
             if (!val) return null;
             const s = String(val).trim().toUpperCase();
-            if (s.startsWith('B') || s.startsWith('지하')) {
+            if (!s) return null;
+
+            if (s.startsWith('-')) {
                 const num = parseInt(s.replace(/\D/g, ''), 10);
                 return isNaN(num) ? null : -num;
             }
-            const num = parseInt(s.replace(/[^0-9-]/g, ''), 10);
+            if (s.startsWith('지상')) {
+                const num = parseInt(s.replace(/\D/g, ''), 10);
+                return isNaN(num) ? null : num;
+            }
+            if (s.startsWith('B') || s.startsWith('지하') || s.startsWith('지')) {
+                const num = parseInt(s.replace(/\D/g, ''), 10);
+                return isNaN(num) ? null : -num;
+            }
+            const num = parseInt(s.replace(/[^0-9]/g, ''), 10);
             return isNaN(num) ? null : num;
         }
 
@@ -11876,8 +11891,11 @@
             const fStart = parseFloorNum(floorState.partialSetting.floorStart);
             const fEnd = parseFloorNum(floorState.partialSetting.floorEnd);
             if (fStart === null && fEnd === null) return true;
-            const minF = (fStart !== null && fEnd !== null) ? Math.min(fStart, fEnd) : (fStart !== null ? fStart : -999);
-            const maxF = (fStart !== null && fEnd !== null) ? Math.max(fStart, fEnd) : (fEnd !== null ? fEnd : 999);
+            const validFloors = [];
+            if (fStart !== null) validFloors.push(fStart);
+            if (fEnd !== null) validFloors.push(fEnd);
+            const minF = Math.min(...validFloors);
+            const maxF = Math.max(...validFloors);
             return floorNum >= minF && floorNum <= maxF;
         }
 
@@ -11900,8 +11918,11 @@
             const fEnd = parseFloorNum(floorState.partialSetting.floorEnd);
 
             if (fStart !== null || fEnd !== null) {
-                const minF = (fStart !== null && fEnd !== null) ? Math.min(fStart, fEnd) : (fStart !== null ? fStart : 1);
-                const maxF = (fStart !== null && fEnd !== null) ? Math.max(fStart, fEnd) : (fEnd !== null ? fEnd : 1);
+                const validFloors = [];
+                if (fStart !== null) validFloors.push(fStart);
+                if (fEnd !== null) validFloors.push(fEnd);
+                const minF = Math.min(...validFloors);
+                const maxF = Math.max(...validFloors);
 
                 const currentRatio = parseFloorRatio(floorState.floorRatioStr);
                 let targetAbove = Math.max(currentRatio.above, maxF > 0 ? maxF : 1);
@@ -11910,7 +11931,7 @@
                 const newRatioStr = `${targetAbove}/${targetBelow}`;
                 if (newRatioStr !== floorState.floorRatioStr) {
                     floorState.floorRatioStr = newRatioStr;
-                    inputFloorRatio.value = newRatioStr;
+                    if (inputFloorRatio) inputFloorRatio.value = newRatioStr;
                 }
                 syncFloorsFromRatio();
             }
@@ -12797,7 +12818,6 @@
 
         saveFloorImageBtn.addEventListener('click', async () => {
             const target = document.getElementById('floor-capture-area');
-            const tableContainer = document.getElementById('table-container');
             if (!target) return;
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
@@ -12807,10 +12827,7 @@
             try {
                 if (typeof html2canvas === 'undefined') throw new Error('html2canvas unavailable');
 
-                const fullWidth = target.offsetWidth;
-                const extraHeight = tableContainer ? Math.max(0, tableContainer.scrollHeight - tableContainer.clientHeight) : 0;
-                const bannerHeight = 44;
-                const totalHeight = target.offsetHeight + extraHeight + bannerHeight + 12;
+                const fullWidth = target.offsetWidth || 650;
 
                 const canvas = await html2canvas(target, {
                     scale: 2,
@@ -12818,9 +12835,6 @@
                     useCORS: true,
                     logging: false,
                     width: fullWidth,
-                    height: totalHeight,
-                    windowWidth: document.documentElement.clientWidth,
-                    windowHeight: totalHeight + 500,
                     scrollY: 0,
                     scrollX: 0,
                     onclone: (clonedDoc) => {
@@ -12839,19 +12853,26 @@
                             cModalContent.style.overflow = 'visible';
                         }
                         if (cTarget) {
-                            cTarget.style.height = `${totalHeight}px`;
+                            cTarget.style.height = 'auto';
                             cTarget.style.maxHeight = 'none';
+                            cTarget.style.flex = 'none';
                             cTarget.style.overflow = 'visible';
                             cTarget.style.width = `${fullWidth}px`;
+                            cTarget.style.padding = '8px 6px';
+                            cTarget.style.background = '#f1f5f9';
                         }
                         if (cReport) {
                             cReport.style.height = 'auto';
                             cReport.style.maxHeight = 'none';
+                            cReport.style.flex = 'none';
                             cReport.style.overflow = 'visible';
+                            cReport.style.padding = '8px';
+                            cReport.style.marginBottom = '0';
                         }
                         if (cTable) {
                             cTable.style.height = 'auto';
                             cTable.style.maxHeight = 'none';
+                            cTable.style.flex = 'none';
                             cTable.style.overflow = 'visible';
                         }
 
@@ -12887,7 +12908,7 @@
         function openModal(m) {
             if (m) {
                 m.classList.remove('hidden');
-                if (m.id === 'checklistModal' || m.id === 'specialVehicleModal' || m.id === 'facilityModal' || m.id === 'hazmatModal' || m.id === 'floorStatusModal') {
+                if (m.id === 'checklistModal' || m.id === 'specialVehicleModal' || m.id === 'facilityModal' || m.id === 'hazmatModal' || m.id === 'floorStatusModal' || m.id === 'casualtyStatusModal') {
                     openModalId = m.id;
                     if (isAppLoaded) saveAppState();
                 }
