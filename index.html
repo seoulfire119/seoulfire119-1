@@ -2073,7 +2073,7 @@
 
     
 
-        /* 툴킷 전용 홈 런처 레이아웃 오버라이드 */
+        /* 툴킷 전용 홈 런처 레이아웃 오버라이드 (원래 버튼 크기로 복원) */
         html, body {
             overflow: auto !important;
             background-color: #f1f5f9 !important;
@@ -2084,6 +2084,34 @@
             height: auto !important;
             max-height: none !important;
             overflow: visible !important;
+        }
+        .app-header {
+            height: 54px !important;
+            padding: 0 14px !important;
+        }
+        #resetModalOpenBtn {
+            height: 38px !important;
+            padding: 0 16px !important;
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            border: 1.5px solid #fca5a5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px -2px rgba(220, 38, 38, 0.45) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            letter-spacing: -0.02em !important;
+            transition: transform 0.14s ease, filter 0.14s ease !important;
+        }
+        #resetModalOpenBtn:hover {
+            filter: brightness(1.06) !important;
+            transform: translateY(-1px) !important;
+        }
+        #resetModalOpenBtn:active {
+            transform: scale(0.96) !important;
         }
         .home-launcher {
             flex: 1;
@@ -2105,7 +2133,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: 16px;
             text-align: left;
             color: #ffffff;
             position: relative;
@@ -2541,8 +2569,8 @@
                             <div style="width: 54px; height: 54px; border-radius: 16px; background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 15px -3px rgba(13, 148, 136, 0.35);">
                                 <span style="font-size: 26px; line-height: 1;">🌉</span>
                             </div>
-                            <h1 style="font-size: clamp(21px, 4.5vw, 27px); font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0;">시설물 제원 및 현황정보 검색</h1>
-                            <div style="font-size: 13.5px; font-weight: 700; color: #475569; letter-spacing: -0.02em; margin-top: -4px;">(터널·대교·지하차도 · 지하철역 · 도로명/지번 주소 건축물·스프링클러)</div>
+                            <h1 style="font-size: clamp(20px, 4.3vw, 26px); font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0;">건축물 / 시설물 제원 및 현황정보 검색</h1>
+                            <div style="font-size: 13.5px; font-weight: 700; color: #475569; letter-spacing: -0.02em; margin-top: -4px;">(건축물·스프링클러 / 터널, 대교, 지하차도, 지하철역 등)</div>
 
                             <form id="facilitySearchForm" style="position: relative; width: 100%; max-width: 560px; margin: 0 auto;">
                                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 17px; pointer-events: none;"></i>
@@ -2550,7 +2578,7 @@
                                     type="text"
                                     id="facilitySearchInput"
                                     class="facility-search-input"
-                                    placeholder="시설물명, 지하철역 또는 주소를 입력하세요 (예: 가양대교, 구기터널, 서울역, 마포구 월드컵로 207)"
+                                    placeholder="건축물 주소(도로명·지번) 또는 시설물(터널·대교·지하철역) 입력"
                                 >
                                 <button type="submit" class="facility-search-btn">
                                     <span>검색</span>
@@ -2715,7 +2743,7 @@
                             </div>
                         </div>
                     
-                        <!-- 건축물대장 및 스프링클러 검색 결과 컨테이너 (첨부파일 표제부 + 층별현황 양식 적용) -->
+                        <!-- 건축물대장 및 스프링클러 검색 결과 컨테이너 -->
                         <div id="facilityBuildingResultContainer" style="display: none; flex-direction: column; gap: 14px; background: #ffffff; padding: 14px; border-radius: 14px; border: 1px solid #cbd5e1;">
                             <!-- 0. 스프링클러 설치 현황 배너 -->
                             <div id="bldResSprinklerCard" style="padding: 14px 16px; border-radius: 10px; border: 1.5px solid #10b981; border-left: 5px solid #10b981; display: flex; flex-direction: column; gap: 6px; background: #ecfdf5;">
@@ -2730,8 +2758,8 @@
                                 <div id="bldResSprinklerDetail" style="font-size: 12px; font-weight: 700; color: #047857; line-height: 1.45;">[적용기준: ...]</div>
                             </div>
 
-                            <!-- 1. 고유번호 및 건축물 목록 표 -->
-                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- 1. 고유번호 및 건축물 목록 표 (대장종류, 대지위치 삭제 / 동명칭 순서 정렬) -->
+                            <div id="bldLedgerTopListSection" style="display: flex; flex-direction: column; gap: 6px;">
                                 <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                     <div style="font-size: 15px; font-weight: 900; color: #1e3a8a; letter-spacing: -0.02em;">
                                         · 고유번호 : <span id="bldLedgerPnuCode">-</span>
@@ -2742,8 +2770,6 @@
                                     <table class="bld-ledger-top-table">
                                         <thead>
                                             <tr>
-                                                <th>대장종류</th>
-                                                <th>대지위치</th>
                                                 <th>건축물명칭</th>
                                                 <th>동명칭및번호</th>
                                                 <th>주용도</th>
@@ -2755,11 +2781,11 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div style="font-size: 11.5px; color: #e11d48; font-weight: 700;">※ 위의 목록에서 건축물을 선택하시면 상세정보를 열람하실 수 있습니다.</div>
+                                <div id="bldLedgerSelectGuideText" style="font-size: 12px; color: #e11d48; font-weight: 800; padding: 2px 0;">※ 위의 목록에서 건축물(동)을 선택하시면 상세정보와 층별현황을 열람하실 수 있습니다.</div>
                             </div>
 
                             <!-- 2. 건축물 표제부 상세 표 -->
-                            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                            <div id="bldLedgerDetailSection" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <div id="bldLedgerDetailSectionTitle" style="font-size: 15px; font-weight: 900; color: #1e3a8a;">· 일반건축물</div>
                                     <span id="bldLedgerFlrBadge" style="font-size: 13.5px; font-weight: 900; color: #1d4ed8; background: #eff6ff; border: 1.5px solid #60a5fa; padding: 4px 11px; border-radius: 8px; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.12);">지상 -층 / 지하 -층</span>
@@ -2835,7 +2861,7 @@
                             </div>
 
                             <!-- 3. 층별현황 표 -->
-                            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                            <div id="bldLedgerFloorSection" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
                                 <div style="display: flex; align-items: baseline; justify-content: space-between;">
                                     <div style="font-size: 15px; font-weight: 900; color: #1e3a8a;">· 층별현황</div>
                                     <span style="font-size: 11.5px; color: #64748b; font-weight: 700;">단위 : ㎡</span>
@@ -3190,7 +3216,7 @@
         <div id="resetModal" class="modal hidden">
             <div class="modal-body">
                 <h3>작성 내용 전체 초기화</h3>
-                <p>체크리스트 진행 상태, 층별 현황판, 사상자 현황의 모든 입력 내용이 초기 상태로 리셋됩니다. 계속하시겠습니까?</p>
+                <p>체크리스트, 소방 특수차 현황, 건축물/시설물 검색, 위험물 통합검색, 층별 현황판, 사상자 현황의 모든 조회·입력 내용이 초기 상태로 리셋됩니다. 계속하시겠습니까?</p>
                 <div class="modal-btns">
                     <button id="resetCancelBtn" class="modal-btn btn-cancel">취소 (ESC)</button>
                     <button id="resetConfirmBtn" class="modal-btn btn-danger">네 (Enter)</button>
@@ -12368,7 +12394,6 @@
             if (!dongName) return '';
             const cleanDong = dongName.trim();
             const candidates = [cleanDong];
-            // 행정동 숫자 제거 폴백 (예: 성산2동 -> 성산동, 역삼1동 -> 역삼동, 방배본동 -> 방배동)
             const stripped = cleanDong.replace(/\d+동$/, '동').replace(/본동$/, '동');
             if (stripped !== cleanDong) candidates.push(stripped);
 
@@ -12677,8 +12702,8 @@
                 const cleanPostQ = queryRoadAddr
                     .replace(/,.*$/, '')
                     .replace(/\([^)]*\)/g, '')
-                    .replace(/\d{1,4}동.*$/, '')
-                    .replace(/\d{1,4}호.*$/, '')
+                    .replace(/\b\d{1,4}동\b.*$/, '')
+                    .replace(/\b\d{1,4}호\b.*$/, '')
                     .trim();
                 const postEndpoints = [
                     `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(/^서울/.test(cleanPostQ) ? cleanPostQ : '서울 ' + cleanPostQ)}&v=3.0`,
@@ -12694,7 +12719,6 @@
                         if (res.ok) {
                             const pJson = await res.json();
                             const rows = Array.isArray(pJson?.results) ? pJson.results : [];
-                            // 서울 지역 우선 필터링
                             const seoulRows = rows.filter(r => JSON.stringify(r).includes('서울'));
                             const targetRows = seoulRows.length > 0 ? seoulRows : rows;
                             for (const r of targetRows.slice(0, 8)) {
@@ -12780,7 +12804,6 @@
             };
             if (sigunguCd && bjdongCd) pushCand(sigunguCd, bjdongCd);
 
-            // 도로명만 있고 지번/법정동이 부족할 때: 도로명 단독 재검색 + Photon + 도로명 접두어 폴백
             if (queryRoadAddr && !bun) {
                 const roadOnlyM = queryRoadAddr.match(/([가-힣0-9]+(?:대로|로|길)(?:\d+길)?)/);
                 const roadOnly = roadOnlyM ? roadOnlyM[1] : '';
@@ -12847,7 +12870,6 @@
                     } catch (e) {}
                 }
 
-                // 도로명 접두어 기반 법정동 폴백 (예: 화곡로66길 -> 강서구 화곡동, 등촌동 등)
                 if (roadOnly) {
                     const stem = roadOnly.replace(/(?:\d+번?길|대로|로|길).*$/, '').trim();
                     if (stem.length >= 2) {
@@ -13115,6 +13137,378 @@
 
         
 
+        // 첨부파일 (스프링클러 설비.pdf, 33쪽) 기준에 맞춘 정밀 스프링클러 설치기준 판별 함수 오버라이드
+        function evaluateSprinklerByLawAndUsage(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null) {
+            let ymd = parseInt(String(useAprDay || '').replace(/\D/g, '').substring(0, 8), 10) || 0;
+            const isUnknownDate = (ymd < 19000101);
+            if (isUnknownDate) ymd = 20260101;
+            const dateNote = isUnknownDate ? ' (사용승인일 미상으로 현행 기준 적용)' : '';
+
+            let grndFlr = 0;
+            let ugrndFlr = 0;
+            if (typeof grndFlrCnt === 'string' && grndFlrCnt.includes('/')) {
+                const parts = grndFlrCnt.split('/');
+                grndFlr = parseInt(parts[0], 10) || 0;
+                ugrndFlr = parseInt(parts[1], 10) || 0;
+            } else {
+                grndFlr = parseInt(grndFlrCnt, 10) || 0;
+            }
+
+            const totalAreaNum = parseFloat(totArea) || 0;
+            const archAreaNum = parseFloat(archArea) || 0;
+
+            // 층별현황(flrItems) 기반 정밀 바닥면적 및 층별 용도 분석
+            let flrUsageStrings = '';
+            let maxFlr4PlusOrSubArea = 0;
+            let maxSubArea = 0;
+            let maxSingleFlrArea = 0;
+            let commAreaSum = 0;
+
+            if (Array.isArray(flrItems) && flrItems.length > 0) {
+                flrItems.forEach(f => {
+                    const gb = String(f.flrGbCd || '').trim();
+                    const gbNm = String(f.flrGbCdNm || '').trim();
+                    const flrNo = parseFloat(f.flrNo || '0') || 0;
+                    const area = parseFloat(String(f.area || '0').replace(/[^0-9.]/g, '')) || 0;
+                    const pStr = `${f.mainPurpsCdNm || ''} ${f.etcPurps || ''}`;
+                    flrUsageStrings += ' ' + pStr;
+                    if (area > maxSingleFlrArea) maxSingleFlrArea = area;
+                    const isSub = (gb === '10' || gbNm.includes('지하'));
+                    const isGrnd4Plus = ((gb === '20' || gbNm.includes('지상') || (!isSub && !gbNm.includes('옥탑'))) && flrNo >= 4);
+                    if (isSub && area > maxSubArea) maxSubArea = area;
+                    if ((isSub || isGrnd4Plus) && area > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = area;
+                    if (/근린생활|의원|치과|한의원|음식점|고시원|사무소|소매점|학원|독서실|체력단련|산후조리|조산원/.test(pStr)) {
+                        commAreaSum += area;
+                    }
+                });
+            } else {
+                const estFlr = archAreaNum > 0 ? archAreaNum : (totalAreaNum > 0 && (grndFlr + ugrndFlr) > 0 ? (totalAreaNum / (grndFlr + ugrndFlr)) : 0);
+                maxSingleFlrArea = estFlr;
+                if (grndFlr >= 4 || ugrndFlr >= 1) maxFlr4PlusOrSubArea = estFlr;
+                if (ugrndFlr >= 1) maxSubArea = estFlr;
+            }
+
+            const hasFlr1000In4PlusOrSub = (maxFlr4PlusOrSubArea >= 1000);
+            const rawPurps = `${mainPurpsCdNm || ''} ${etcPurps || ''} ${bldNameHint || ''} ${ledgerType || ''} ${flrUsageStrings}`.trim();
+            const fullContext = `${rawPurps} ${combinedContext || ''}`;
+
+            // 용도 분류 (스프링클러 설비.pdf 목차 1~30번 기준)
+            const isAptOrDorm = /공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(rawPurps);
+            const isRowOrMultiHouse = /연립주택|연립|다세대주택|다세대/.test(rawPurps) && !/아파트/.test(rawPurps);
+            const isComm = /근린생활|제1종근린|제2종근린|근생/.test(rawPurps);
+            const isPostpartum = /조산원|산후조리원/.test(fullContext);
+            const isInpatientClinic = (/의원|치과의원|한의원/.test(fullContext) && /입원/.test(fullContext));
+            const isGosiwon = /고시원/.test(fullContext);
+            const isCulture = /문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장/.test(rawPurps);
+            const isReligion = /종교시설|종교|교회|성당|사찰/.test(rawPurps);
+            const isSales = /판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(rawPurps);
+            const isTransport = /운수시설|여객자동차|철도시설|공항시설|항만시설/.test(rawPurps);
+            const isMedical = /의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(rawPurps);
+            const isNursingHosp = /요양병원/.test(fullContext);
+            const isPsychOrRehab = /정신의료|의료재활/.test(fullContext);
+            const isEdu = /교육연구|학교|교육원|직업훈련소|학원|연구소|도서관/.test(rawPurps);
+            const isElderlyChild = /노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(rawPurps);
+            const isTraining = /수련시설|생활권수련|자연권수련|유스호스텔/.test(rawPurps);
+            const isSports = /운동시설|체육관|운동장/.test(rawPurps);
+            const isOffice = /업무시설|오피스텔|청사|사무소|오피스/.test(rawPurps);
+            const isLodging = /숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도/.test(rawPurps);
+            const isAmusement = /위락시설|단란주점|유흥주점|무도장|무도학원|카지노/.test(rawPurps);
+            const isFactory = /공장/.test(rawPurps);
+            const isWarehouse = /창고시설|창고|하역장|물류터미널|집배송/.test(rawPurps);
+            const isLogisticsTerminal = /물류터미널/.test(fullContext);
+            const isUndergroundMall = /지하상가|지하가/.test(fullContext);
+            const isComplexBld = /복합건축물|주상복합/.test(fullContext) || ((isAptOrDorm || isLodging) && (isComm || isOffice || isSales));
+
+            // 1. 공동주택 (아파트등, 연립주택, 다세대주택, 기숙사) - PDF p.1~2
+            if (isAptOrDorm) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 공동주택 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && (grndFlr >= 11 || (totalAreaNum >= 5000 && (isComplexBld || /기숙사/.test(rawPurps))))) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 공동주택 ('05.1.1) 층수가 11층 이상일 경우 전층 (복합·기숙사 연면적 5,000㎡ 이상 전층)]${dateNote}` };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층]${dateNote}` };
+                }
+                if (ymd >= 19900701 && grndFlr >= 16) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 16층 이상 설치', detail: `[적용기준: 공동주택 ('90.7.1) 16층 이상인 것은 16층 이상인 층]${dateNote}` };
+                }
+                if (ymd >= 19920728 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 공동주택 ('92.7.28) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                if (ymd >= 20241201 && isRowOrMultiHouse) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설비 설치', detail: `[적용기준: 공동주택 ('24.12.1) 연립주택 및 다세대주택 (주택전용 간이스프링클러설비)]${dateNote}` };
+                }
+            }
+
+            // 2. 의료시설 - PDF p.10
+            if (isMedical) {
+                if (isNursingHosp) {
+                    if (totalAreaNum >= 600) {
+                        return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 의료시설(요양병원) ('14.7.8 / '18.6.30 소급적용) 바닥면적 합계 600㎡ 이상 모든 층]${dateNote}` };
+                    }
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 의료시설(요양병원) ('15.7.1 / '18.6.30 소급적용) 바닥면적 합계 600㎡ 미만 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 의료시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if ((ymd >= 20190806 && totalAreaNum >= 600) || (isPsychOrRehab && ymd >= 20040530 && totalAreaNum >= 600)) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 의료시설 ('19.8.6 병원급 / '04.5.30 정신의료기관) 바닥면적 합계 600㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 의료시설 ('05.1.1) 층수가 11층 이상인 경우 전층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 의료시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                if ((ymd >= 20190806 && totalAreaNum > 0 && totalAreaNum < 600) || (isPsychOrRehab && totalAreaNum >= 300 && totalAreaNum < 600)) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 의료시설 ('19.8.6) 병원급 바닥면적 합계 600㎡ 미만 (정신의료·재활시설 300~600㎡ 미만)]${dateNote}` };
+                }
+            }
+
+            // 3. 노유자시설 - PDF p.12
+            if (isElderlyChild) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 노유자시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 노유자시설 바닥면적 합계 600㎡ 이상인 것은 모든 층]${dateNote}` };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 노유자시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                if (totalAreaNum >= 300 || /노유자생활|요양원|생활시설/.test(fullContext)) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 노유자시설 바닥면적 합계 300㎡ 이상~600㎡ 미만 및 노유자 생활시설('14.2.4 소급적용)]${dateNote}` };
+                }
+            }
+
+            // 4. 근린생활시설 - PDF p.5
+            if (isComm || isPostpartum || isInpatientClinic || isGosiwon) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 근린생활시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (isPostpartum && totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 근린생활시설(조산원·산후조리원) 바닥면적 합계 600㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 근린생활시설 ('05.1.1) 층수가 11층 이상일 경우 전층]${dateNote}` };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층]${dateNote}` };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: `[적용기준: 근린생활시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 근린생활시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                const effectiveCommArea = commAreaSum > 0 ? Math.max(commAreaSum, totalAreaNum) : totalAreaNum;
+                if (ymd >= 20040530 && effectiveCommArea >= 1000) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 근린생활시설 ('04.5.30) 근린생활시설 바닥면적의 합계가 1,000㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (isPostpartum && ymd >= 20220225 && totalAreaNum < 600) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치', detail: `[적용기준: 근린생활시설 ('22.2.25) 조산원·산후조리원으로서 연면적 600㎡ 미만 시설]${dateNote}` };
+                }
+                if (isInpatientClinic && ymd >= 20190806) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치', detail: `[적용기준: 근린생활시설 ('19.8.6) 의원·치과의원·한의원으로서 입원실이 있는 시설]${dateNote}` };
+                }
+                if (isGosiwon) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치 (고시원)', detail: `[적용기준: 근린생활시설(고시원) 다중이용업소 간이스프링클러 의무 설치 대상]${dateNote}` };
+                }
+            }
+
+            // 5. 문화 및 집회시설 (p.6) / 종교시설 (p.7) / 운동시설 (p.15)
+            if (isCulture || isReligion || isSports) {
+                const facLabel = isCulture ? '문화 및 집회시설' : (isReligion ? '종교시설' : '운동시설');
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} ('05.1.1) 층수가 11층 이상일 경우 전층]${dateNote}` };
+                }
+                if (isCulture && /영화|극장/.test(fullContext) && ((maxSubArea >= 500) || (maxSingleFlrArea >= 1000) || (totalAreaNum >= 1000))) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 문화 및 집회시설(영화상영관) 지하·무창층 500㎡ 이상 또는 기타층 1,000㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (totalAreaNum >= 460) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} 수용인원 100명(바닥면적 460㎡) 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: ${facLabel} ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+            }
+
+            // 6. 판매시설 (p.8) / 운수시설 (p.9)
+            if (isSales || isTransport) {
+                const facLabel = isSales ? '판매시설' : '운수시설';
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (totalAreaNum >= 5000 || totalAreaNum >= 1500) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} 바닥면적 합계 5,000㎡ 이상 또는 수용인원 500명(1,500㎡) 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: ${facLabel} ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+            }
+
+            // 7. 교육연구시설 (p.11) / 수련시설 (p.14)
+            if (isEdu || isTraining) {
+                const facLabel = isEdu ? '교육연구시설' : '수련시설';
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20040530 && /기숙사/.test(fullContext) && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel}(기숙사) ('04.5.30) 연면적 5,000㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (isTraining && totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 수련시설(숙박 가능) 바닥면적 합계 600㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: ${facLabel} ('05.1.1) 층수가 11층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 19920728 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: ${facLabel} ('92.7.28) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                if (/합숙소/.test(fullContext) && totalAreaNum >= 100) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 교육연구시설 내 합숙소 연면적 100㎡ 이상 모든 층]${dateNote}` };
+                }
+            }
+
+            // 8. 숙박시설 - PDF p.17
+            if (isLodging) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 숙박시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20221201 && totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 숙박시설 ('22.12.1) 바닥면적의 합계가 600㎡ 이상 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 숙박시설 ('05.1.1) 층수가 11층 이상일 경우 전층]${dateNote}` };
+                }
+                if (ymd >= 19950810 && totalAreaNum >= 5000 && isComplexBld) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 숙박시설/복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 숙박시설 ('84.7.1) 11층 이상 여관·호텔 전층]${dateNote}` };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 숙박시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+                if (ymd >= 20221201 && totalAreaNum >= 300 && totalAreaNum < 600) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: `[적용기준: 숙박시설 ('22.12.1) 바닥면적의 합계가 300㎡ 이상 600㎡ 미만인 시설]${dateNote}` };
+                }
+            }
+
+            // 9. 업무시설 - PDF p.16
+            if (isOffice) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 업무시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+                }
+                if (ymd >= 20050101 && (grndFlr >= 11 || (totalAreaNum >= 5000 && (isComplexBld || /오피스텔/.test(rawPurps))))) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 업무시설 ('05.1.1) 층수가 11층 이상인 경우 전층 (복합건축물 연면적 5,000㎡ 이상 전층)]${dateNote}` };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층]${dateNote}` };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: `[적용기준: 업무시설 ('92.7.28) 11층 이상인 것은 11층 이상인 층]${dateNote}` };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 업무시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+                }
+            }
+
+            // 10. 창고시설 (p.20) 및 지하상가 (p.33)
+            if (isUndergroundMall && totalAreaNum >= 1000) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 지하상가 연면적 1,000㎡ 이상 모든 층]${dateNote}` };
+            }
+            if (isWarehouse) {
+                if ((isLogisticsTerminal && totalAreaNum >= 1500) || totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 창고시설 바닥면적 합계 5,000㎡ 이상(물류터미널 1,500㎡ 이상) 모든 층]${dateNote}` };
+                }
+            }
+
+            // 11. 기타 모든 특정소방대상물 공통 기준 (위락, 공장, 창고, 위험물, 항공기, 동식물, 자원순환, 교정군사, 방송통신, 발전, 묘지, 관광휴게, 장례 등 - PDF p.18~32)
+            if (ymd >= 20180128 && grndFlr >= 6) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 특정소방대상물 ('18.1.28) 층수가 6층 이상인 경우 모든 층]${dateNote}` };
+            }
+            if (ymd >= 20050101 && grndFlr >= 11) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 특정소방대상물 ('05.1.1) 층수가 11층 이상인 경우 모든 층]${dateNote}` };
+            }
+            if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: `[적용기준: 복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층]${dateNote}` };
+            }
+            if (ymd >= 19920728 && grndFlr >= 11) {
+                return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: `[적용기준: 특정소방대상물 ('92.7.28) 11층 이상인 것은 11층 이상인 층]${dateNote}` };
+            }
+            if (hasFlr1000In4PlusOrSub) {
+                return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: `[적용기준: 특정소방대상물 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층]${dateNote}` };
+            }
+
+            return {
+                isInstalled: false,
+                type: 'none',
+                text: '',
+                detail: `[판별참고: ${mainPurpsCdNm || ledgerType || '일반건축물'} · 지상${grndFlr}층/지하${ugrndFlr}층 · 연면적 ${Math.round(totalAreaNum).toLocaleString()}㎡ · 사용승인 ${useAprDay ? formatYmdDate(useAprDay) : '미상'} 기준 의무설치 대상 아님]`
+            };
+        }
+
+        // 동명칭 및 번호 자연순서(오름차순) 정렬 헬퍼 (예: 101동, 102동, 103동... -> A동, B동 -> 상가동, 관리동)
+        function sortBuildingMatchesByDong(matches) {
+            if (!Array.isArray(matches) || matches.length <= 1) return matches;
+            const parseDongSortKey = (m) => {
+                const it = m.item || m || {};
+                const dong = String(it.dongNm || '').trim();
+                const bld = String(it.bldNm || '').trim();
+                const label = dong || bld;
+
+                // 1) "101동", "제101동", "101", "101-1동" 등 숫자로 시작하거나 숫자+동 패턴 추출
+                const numMatch = dong.match(/^(?:제\s*)?(\d+)(?:\s*[-~]\s*(\d+))?\s*(?:동|호)?$/) ||
+                                 dong.match(/(\d+)\s*동/) ||
+                                 (!dong && bld.match(/(\d+)\s*동/));
+                if (numMatch) {
+                    return {
+                        group: 1,
+                        num1: parseInt(numMatch[1], 10),
+                        num2: numMatch[2] ? parseInt(numMatch[2], 10) : 0,
+                        dong,
+                        bld
+                    };
+                }
+                // 2) 동명칭이 있는 비숫자 동 (예: A동, B동, 가동, 상가동, 관리동)
+                if (dong) {
+                    return {
+                        group: 2,
+                        num1: Number.MAX_SAFE_INTEGER,
+                        num2: 0,
+                        dong,
+                        bld
+                    };
+                }
+                // 3) 동명칭이 없는 경우 건축물명칭 기준 정렬
+                return {
+                    group: 3,
+                    num1: Number.MAX_SAFE_INTEGER,
+                    num2: 0,
+                    dong: '',
+                    bld
+                };
+            };
+
+            return [...matches].sort((a, b) => {
+                const ka = parseDongSortKey(a);
+                const kb = parseDongSortKey(b);
+                if (ka.group !== kb.group) return ka.group - kb.group;
+                if (ka.group === 1) {
+                    if (ka.num1 !== kb.num1) return ka.num1 - kb.num1;
+                    if (ka.num2 !== kb.num2) return ka.num2 - kb.num2;
+                }
+                const cmpDong = ka.dong.localeCompare(kb.dong, 'ko', { numeric: true, sensitivity: 'base' });
+                if (cmpDong !== 0) return cmpDong;
+                return ka.bld.localeCompare(kb.bld, 'ko', { numeric: true, sensitivity: 'base' });
+            });
+        }
+
         const facilityModal = document.getElementById('facilityModal');
         const facilityModalOpenBtn = document.getElementById('facilityModalOpenBtn');
         const facilityCloseBtn = document.getElementById('facilityCloseBtn');
@@ -13177,7 +13571,7 @@
         document.getElementById('facBtnCopyJibun')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayJibunAddr').textContent, '지번주소가 복사되었습니다.'));
         document.getElementById('facBtnCopyPhone')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayPhoneText').textContent, '전화번호가 복사되었습니다.'));
 
-        // 건축물 + 스프링클러 상세 렌더링 (건축물 조회 기능 동일 적용)
+        // 건축물 + 스프링클러 상세 렌더링
         const BLD_HUB_FLR_API_URL = 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrFlrOulnInfo';
         const BLD_HUB_JIJIGU_API_URL = 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrJijiguInfo';
 
@@ -13249,16 +13643,22 @@
 
         let currentLotBuildingMatches = [];
 
-        async function renderBuildingDetailInFacility(matchObj, siblingMatches = null) {
-            const it = matchObj.item;
-            const combinedContext = matchObj.combinedContext || '';
-            const bldNameHint = matchObj.bldNameHint || '';
-            const roadFullKeyword = matchObj.roadFullKeyword || '';
+        async function renderBuildingDetailInFacility(matchObj, siblingMatches = null, userSelectedDong = false) {
             if (Array.isArray(siblingMatches) && siblingMatches.length > 0) {
-                currentLotBuildingMatches = siblingMatches;
-            } else if (!currentLotBuildingMatches.some(m => m.item === it)) {
+                currentLotBuildingMatches = sortBuildingMatchesByDong(siblingMatches);
+            } else if (!currentLotBuildingMatches.some(m => m.item === matchObj.item)) {
                 currentLotBuildingMatches = [matchObj];
+            } else {
+                currentLotBuildingMatches = sortBuildingMatchesByDong(currentLotBuildingMatches);
             }
+
+            const isSingleBuilding = (currentLotBuildingMatches.length === 1);
+            const showDetailNow = isSingleBuilding || userSelectedDong;
+            const activeMatch = showDetailNow ? matchObj : currentLotBuildingMatches[0];
+            const it = activeMatch.item;
+            const combinedContext = activeMatch.combinedContext || '';
+            const bldNameHint = activeMatch.bldNameHint || '';
+            const roadFullKeyword = activeMatch.roadFullKeyword || '';
 
             const resultEl = document.getElementById('facilityResultContainer');
             const subwayResultEl = document.getElementById('facilitySubwayResultContainer');
@@ -13267,12 +13667,12 @@
             if (subwayResultEl) subwayResultEl.style.display = 'none';
             if (bldResultEl) bldResultEl.style.display = 'flex';
 
-            const sigunguCd = String(it.sigunguCd || matchObj.sigunguCd || '11680').padStart(5, '0');
-            const bjdongCd = String(it.bjdongCd || matchObj.bjdongCd || '00000').padStart(5, '0');
-            const platGbRaw = String(it.platGbCd || matchObj.platGbCd || '0').trim();
+            const sigunguCd = String(it.sigunguCd || activeMatch.sigunguCd || '11680').padStart(5, '0');
+            const bjdongCd = String(it.bjdongCd || activeMatch.bjdongCd || '00000').padStart(5, '0');
+            const platGbRaw = String(it.platGbCd || activeMatch.platGbCd || '0').trim();
             const pnuPlatType = (platGbRaw === '1') ? '2' : '1';
-            const bunPad = String(it.bun || matchObj.bun || '0000').padStart(4, '0');
-            const jiPad = String(it.ji || matchObj.ji || '0000').padStart(4, '0');
+            const bunPad = String(it.bun || activeMatch.bun || '0000').padStart(4, '0');
+            const jiPad = String(it.ji || activeMatch.ji || '0000').padStart(4, '0');
             const bunInt = parseInt(bunPad, 10) || 0;
             const jiInt = parseInt(jiPad, 10) || 0;
             const jibunShort = bunInt > 0 ? (jiInt > 0 ? `${bunInt}-${jiInt}` : `${bunInt}`) : '-';
@@ -13280,40 +13680,77 @@
             const pnuEl = document.getElementById('bldLedgerPnuCode');
             if (pnuEl) pnuEl.textContent = `${sigunguCd}${bjdongCd}-${pnuPlatType}-${bunPad}${jiPad}`;
 
-            // 1. 상단 건축물 목록 표 렌더링 (클릭 시 해당 동/건축물 상세 열람)
+            // 1. 상단 건축물 목록 표 렌더링 (동 선택 시 선택한 목록 1개만 남기고 나머지 숨김 처리)
             const topBody = document.getElementById('bldLedgerTopListBody');
+            const guideTextEl = document.getElementById('bldLedgerSelectGuideText');
             if (topBody) {
                 topBody.innerHTML = '';
-                currentLotBuildingMatches.forEach((mItem) => {
+                const rowsToRender = showDetailNow ? [activeMatch] : currentLotBuildingMatches;
+                rowsToRender.forEach((mItem) => {
                     const rowIt = mItem.item;
                     const tr = document.createElement('tr');
-                    if (rowIt === it) tr.className = 'is-selected';
-
-                    const regKind = (rowIt.regstrKindCdNm || rowIt.regstrGbCdNm || '일반건축물').trim();
-                    const mainAtch = (rowIt.mainAtchGbCdNm || (rowIt.mainAtchGbCd === '1' ? '부속건축물' : '주건축물')).trim();
-                    const platClean = (rowIt.platPlc || '').replace(/^서울특별시\s*/, '').replace(/번지$/, '').trim();
-                    const newPlatShort = (() => {
-                        const rp = extractRoadAddressParts(rowIt.newPlatPlc || '');
-                        return rp.fullRoad || (rowIt.newPlatPlc || '').replace(/^서울특별시\s*[가-힣]+구\s*/, '').trim();
-                    })();
+                    if (showDetailNow && rowIt === it) tr.className = 'is-selected';
 
                     const rGrnd = parseInt(rowIt.grndFlrCnt || '0', 10) || 0;
                     const rUgrnd = parseInt(rowIt.ugrndFlrCnt || '0', 10) || 0;
                     const rFlrText = (rGrnd > 0 || rUgrnd > 0) ? `지상${rGrnd}/지하${rUgrnd}` : '-';
+                    const bldNmCell = (rowIt.bldNm || '').trim() || '-';
+                    const dongNmCell = (rowIt.dongNm || '').trim() || '-';
+
                     tr.innerHTML = `
-                        <td>${regKind}<br><span style="font-size:11px; color:#475569;">(${mainAtch})</span></td>
-                        <td>${platClean || '-'}${newPlatShort ? `<br><span style="font-size:11px; color:#475569;">(${newPlatShort})</span>` : ''}</td>
-                        <td>${(rowIt.bldNm || '').trim()}</td>
-                        <td>${(rowIt.dongNm || '').trim()}</td>
-                        <td>${(rowIt.mainPurpsCdNm || '').trim()}</td>
+                        <td style="font-weight:700;">${bldNmCell}</td>
+                        <td style="font-weight:800; color:#1e3a8a;">${dongNmCell}</td>
+                        <td>${(rowIt.mainPurpsCdNm || '').trim() || '-'}</td>
                         <td style="text-align:right; padding-right:10px; font-weight:800;">${formatAreaVal(rowIt.totArea, false)}</td>
                         <td style="white-space:nowrap; font-weight:800; color:#1d4ed8;">${rFlrText}</td>
                     `;
                     tr.addEventListener('click', () => {
-                        renderBuildingDetailInFacility(mItem, currentLotBuildingMatches);
+                        if (showDetailNow && !isSingleBuilding) {
+                            // 이미 선택되어 1개만 보이는 상태에서 행을 다시 클릭하면 전체 동 목록으로 복귀
+                            renderBuildingDetailInFacility(mItem, currentLotBuildingMatches, false);
+                        } else {
+                            renderBuildingDetailInFacility(mItem, currentLotBuildingMatches, true);
+                        }
                     });
                     topBody.appendChild(tr);
                 });
+            }
+
+            const spCard = document.getElementById('bldResSprinklerCard');
+            const detailSec = document.getElementById('bldLedgerDetailSection');
+            const floorSec = document.getElementById('bldLedgerFloorSection');
+
+            // 여러 동이 있고 아직 특정 동을 선택하지 않은 경우: 목록만 먼저 표시
+            if (!showDetailNow) {
+                if (spCard) spCard.style.display = 'none';
+                if (detailSec) detailSec.style.display = 'none';
+                if (floorSec) floorSec.style.display = 'none';
+                if (guideTextEl) {
+                    guideTextEl.innerHTML = `※ 총 ${currentLotBuildingMatches.length}개 동이 조회되었습니다. 위 목록에서 조회할 동(건축물)을 선택하시면 나머지 목록은 숨김 처리되고 상세정보와 층별현황이 표시됩니다.`;
+                    guideTextEl.style.color = '#e11d48';
+                }
+                return;
+            }
+
+            if (spCard) spCard.style.display = 'flex';
+            if (detailSec) detailSec.style.display = 'flex';
+            if (floorSec) floorSec.style.display = 'flex';
+            if (guideTextEl) {
+                if (isSingleBuilding) {
+                    guideTextEl.innerHTML = '※ 단일 건축물(동)이 조회되어 아래에 상세정보와 층별현황이 바로 표시됩니다.';
+                    guideTextEl.style.color = '#0f766e';
+                } else {
+                    const selLabel = [(it.bldNm || '').trim(), (it.dongNm || '').trim()].filter(Boolean).join(' ') || '선택 건축물';
+                    guideTextEl.innerHTML = `<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;"><span>※ 선택하신 <b>[${selLabel}]</b>만 표시 중입니다 (나머지 ${currentLotBuildingMatches.length - 1}개 동 숨김).</span><button type="button" id="btnShowAllDongList" class="cas-no-print" style="padding:3px 9px; border-radius:6px; border:1px solid #93c5fd; background:#eff6ff; color:#1d4ed8; font-size:11.5px; font-weight:800; cursor:pointer;">🔄 다른 동 다시 선택 (${currentLotBuildingMatches.length}개 전체보기)</button></div>`;
+                    guideTextEl.style.color = '#1d4ed8';
+                    const showAllBtn = document.getElementById('btnShowAllDongList');
+                    if (showAllBtn) {
+                        showAllBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            renderBuildingDetailInFacility(activeMatch, currentLotBuildingMatches, false);
+                        });
+                    }
+                }
             }
 
             // 2. 표제부 상세 표 채우기
@@ -13374,12 +13811,11 @@
 
             setCell('bldCellPmsDay', formatYmdDate(it.pmsDay));
             setCell('bldCellStcnsDay', formatYmdDate(it.stcnsDay));
-            const useAprRaw = String(it.useAprDay || it.stcnsDay || '').replace(/\D/g, '');
+            const useAprRaw = String(it.useAprDay || it.pmsDay || it.stcnsDay || '').replace(/\D/g, '');
             setCell('bldCellUseAprDay', formatYmdDate(it.useAprDay));
             setCell('bldCellEtcPurps', it.etcPurps || '');
 
             // 3. 스프링클러 현황 판별 및 API 조회
-            const spCard = document.getElementById('bldResSprinklerCard');
             const spIcon = document.getElementById('bldResSprinklerIcon');
             const spPill = document.getElementById('bldResSprinklerStatusPill');
             const spText = document.getElementById('bldResSprinklerText');
@@ -13388,7 +13824,7 @@
             const totAreaNum = parseFloat(String(it.totArea || '0').replace(/[^0-9.]/g, '')) || 0;
             const archAreaNum = parseFloat(String(it.archArea || '0').replace(/[^0-9.]/g, '')) || 0;
 
-            const lawEval = evaluateSprinklerByLawAndUsage(
+            let lawEval = evaluateSprinklerByLawAndUsage(
                 it.mainPurpsCdNm || ledgerType,
                 it.etcPurps || '',
                 useAprRaw,
@@ -13401,10 +13837,7 @@
             );
 
             const applySprinklerCardStyle = (finalText, finalDetail) => {
-                let cleanSpText = (finalText || '').trim()
-                    .replace(/,\s*\d{2,4}(?:년|\.)\s*\d{1,2}(?:월|\.)\s*\d{1,2}일?(?:\s*시행|\s*개정|\s*소급)?/g, '')
-                    .replace(/\s*\([^)]*\)/g, '').trim();
-
+                let cleanSpText = (finalText || '').trim();
                 if (cleanSpText) {
                     if (cleanSpText.includes('간이')) {
                         spCard.style.background = '#f0fdfa';
@@ -13438,7 +13871,7 @@
                 }
             };
 
-            applySprinklerCardStyle(lawEval.spText, lawEval.detail);
+            applySprinklerCardStyle(lawEval.text, lawEval.detail);
 
             // 4. 비동기 병렬 조회: (A) 층별개요 API, (B) 지역지구구역 API, (C) 소방안전시스템 API
             const flrBody = document.getElementById('bldLedgerFloorBody');
@@ -13459,31 +13892,30 @@
                 fetchOpenApiItemsWithFallback(flrUrls, 5500),
                 fetchOpenApiItemsWithFallback(jijiguUrls, 4500),
                 checkSprinklerInstalledFromApi(
+                    combinedContext,
+                    useAprRaw,
                     bldNm || bldNameHint,
                     roadFullKeyword,
-                    it.platPlc || '',
-                    useAprRaw,
+                    ledgerType,
                     `${grnd}/${ugrnd}`,
+                    totAreaNum,
                     it.mainPurpsCdNm || ledgerType,
                     it.etcPurps || '',
-                    totAreaNum,
-                    combinedContext,
-                    ledgerType,
                     archAreaNum
                 ).catch(() => null)
             ]).then(([flrItems, jijiguItems, spApiRes]) => {
                 // (A) 층별현황 렌더링
-                if (flrBody) {
-                    let filteredFlr = flrItems || [];
-                    if (dongNm && filteredFlr.length > 0) {
-                        const exactDongFlr = filteredFlr.filter(f => (f.dongNm || '').trim() === dongNm);
-                        if (exactDongFlr.length > 0) filteredFlr = exactDongFlr;
-                    }
-                    if (it.mgmBldrgstPk && filteredFlr.length > 0) {
-                        const pkFlr = filteredFlr.filter(f => f.mgmBldrgstPk === it.mgmBldrgstPk);
-                        if (pkFlr.length > 0) filteredFlr = pkFlr;
-                    }
+                let filteredFlr = flrItems || [];
+                if (dongNm && filteredFlr.length > 0) {
+                    const exactDongFlr = filteredFlr.filter(f => (f.dongNm || '').trim() === dongNm);
+                    if (exactDongFlr.length > 0) filteredFlr = exactDongFlr;
+                }
+                if (it.mgmBldrgstPk && filteredFlr.length > 0) {
+                    const pkFlr = filteredFlr.filter(f => f.mgmBldrgstPk === it.mgmBldrgstPk);
+                    if (pkFlr.length > 0) filteredFlr = pkFlr;
+                }
 
+                if (flrBody) {
                     if (filteredFlr.length === 0) {
                         flrBody.innerHTML = '<tr><td colspan="5" style="padding: 14px; color: #64748b;">등록된 층별현황 정보가 없습니다.</td></tr>';
                     } else {
@@ -13546,10 +13978,24 @@
                     if (j3.length > 0) setCell('bldCellJijigu3', j3.join(', '));
                 }
 
-                // (C) 스프링클러 결과 반영
-                if (spApiRes) {
-                    applySprinklerCardStyle(spApiRes.spText || lawEval.spText, spApiRes.detail || lawEval.detail);
-                }
+                // (C) 층별현황(filteredFlr) 바닥면적/용도까지 반영하여 스프링클러 재판별
+                const refinedLawEval = evaluateSprinklerByLawAndUsage(
+                    it.mainPurpsCdNm || ledgerType,
+                    it.etcPurps || '',
+                    useAprRaw,
+                    `${grnd}/${ugrnd}`,
+                    totAreaNum,
+                    combinedContext,
+                    bldNameHint || bldNm,
+                    ledgerType,
+                    archAreaNum,
+                    filteredFlr
+                );
+                const apiText = spApiRes ? (spApiRes.text || spApiRes.spText || '') : '';
+                const apiDetail = spApiRes ? (spApiRes.detail || '') : '';
+                const finalSpText = refinedLawEval.text || apiText || lawEval.text;
+                const finalSpDetail = (refinedLawEval.text ? refinedLawEval.detail : (apiDetail || refinedLawEval.detail || lawEval.detail));
+                applySprinklerCardStyle(finalSpText, finalSpDetail);
             });
         }
 
@@ -13721,19 +14167,18 @@
                     });
                 }
             }
-            return uniqueResults;
+            return sortBuildingMatchesByDong(uniqueResults);
         }
 
         async function searchAddressCandidatesFromPostcodify(query) {
             const cleanQ = (query || '').trim()
                 .replace(/,.*$/, '')
                 .replace(/\([^)]*\)/g, '')
-                .replace(/\d{1,4}동.*$/, '')
-                .replace(/\d{1,4}호.*$/, '')
+                .replace(/\b\d{1,4}동\b.*$/, '')
+                .replace(/\b\d{1,4}호\b.*$/, '')
                 .trim();
             if (!cleanQ) return [];
 
-            // 서울 도로명/지번 검색 정확도를 위해 '서울 ' 접두어 쿼리를 1순위로 요청
             const hasSeoulPrefix = /^서울/.test(cleanQ);
             const postUrls = hasSeoulPrefix
                 ? [
@@ -13776,7 +14221,7 @@
 
             if (rows.length === 0) return [];
 
-            const dongBunJiRegex = /([가-힣]+(?:\d+가)?동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길))/g;
+            const dongBunJiRegex = /([가-힣]+(?:\d+가)?동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
             const inputRoad = extractRoadAddressParts(query);
             const candidates = [];
             const seen = new Set();
@@ -13791,14 +14236,12 @@
                 const roadAddr = (doroPart ? (common && !doroPart.includes('서울') ? `${common} ${doroPart}` : doroPart) : '').replace(/\s+/g, ' ').trim();
                 const jibunAddr = (jibunPart ? (common && !jibunPart.includes('서울') ? `${common} ${jibunPart}` : jibunPart) : '').replace(/\s+/g, ' ').trim();
 
-                // 자치구 코드: 오직 ko_common / 지번 / 도로명에서만 추출 (other_addresses에 섞인 인접 구 배제!)
                 let sg = '';
                 const guSource = `${common} ${jibunAddr} ${roadAddr}`;
                 for (const [gu, code] of Object.entries(SIGUNGU_CODE_MAP)) {
                     if (guSource.includes(gu)) { sg = code; break; }
                 }
 
-                // 법정동 + 본번 + 부번: 1순위 ko_jibeon, 2순위 other_addresses
                 let bj = '', pg = '0', b = '', j = '0';
                 const jibunSources = [jibunAddr, otherAddrs];
                 for (const jSrc of jibunSources) {
@@ -13882,16 +14325,16 @@
                     });
                 }
             }
-            return unique;
+            return sortBuildingMatchesByDong(unique);
         }
 
-        function displayUnifiedFacilityMatch(m, siblingMatches = null) {
+        function displayUnifiedFacilityMatch(m, siblingMatches = null, userSelectedDong = false) {
             const resultEl = document.getElementById('facilityResultContainer');
             const subwayResultEl = document.getElementById('facilitySubwayResultContainer');
             const bldResultEl = document.getElementById('facilityBuildingResultContainer');
 
             if (m.kind === 'building') {
-                renderBuildingDetailInFacility(m, siblingMatches);
+                renderBuildingDetailInFacility(m, siblingMatches, userSelectedDong);
             } else if (m.kind === 'subway' || m.isSubway) {
                 if (resultEl) resultEl.style.display = 'none';
                 if (bldResultEl) bldResultEl.style.display = 'none';
@@ -13979,10 +14422,10 @@
                     multiMatchCount.textContent = addrCandidates.length;
                     multiMatchList.innerHTML = '';
                     multiMatchList.style.flexDirection = 'column';
-                    addrCandidates.forEach((cand, idx) => {
+                    addrCandidates.forEach((cand) => {
                         const card = document.createElement('button');
                         card.type = 'button';
-                        card.className = `addr-cand-card ${idx === 0 ? 'is-active' : ''}`;
+                        card.className = 'addr-cand-card';
                         card.innerHTML = `
                             <div class="addr-cand-info">
                                 <div class="addr-cand-row"><span class="addr-cand-lbl">건물명</span><span class="addr-cand-val">${cand.bldNm || '-'}</span></div>
@@ -14003,16 +14446,11 @@
                                 noResultEl.style.display = 'flex';
                                 return;
                             }
-                            displayUnifiedFacilityMatch(lotMatches[0], lotMatches);
+                            displayUnifiedFacilityMatch(lotMatches[0], lotMatches, false);
                         });
                         multiMatchList.appendChild(card);
                     });
                     multiMatchContainer.style.display = 'flex';
-                    // 첫 번째 후보 자동 로드하여 바로 표제부+층별현황 확인 가능
-                    const firstLotMatches = await fetchBuildingsForLot(addrCandidates[0], q);
-                    if (firstLotMatches.length > 0) {
-                        displayUnifiedFacilityMatch(firstLotMatches[0], firstLotMatches);
-                    }
                     return;
                 }
 
@@ -14031,7 +14469,8 @@
 
             const allAreBuildings = combinedMatches.every(m => m.kind === 'building');
             if (allAreBuildings) {
-                displayUnifiedFacilityMatch(combinedMatches[0], combinedMatches);
+                const sortedBlds = sortBuildingMatchesByDong(combinedMatches);
+                displayUnifiedFacilityMatch(sortedBlds[0], sortedBlds, false);
                 return;
             }
 
@@ -14150,6 +14589,7 @@
                                             d.style.maxHeight = 'none';
                                         }
                                     });
+                                    cBld.querySelectorAll('.cas-no-print').forEach(el => el.remove());
                                     cBld.querySelectorAll('table').forEach(tbl => {
                                         tbl.style.width = '100%';
                                     });
@@ -15776,18 +16216,63 @@
         if (resetCancelBtn) resetCancelBtn.addEventListener('click', () => closeModal(resetModal));
         if (resetConfirmBtn) {
             resetConfirmBtn.addEventListener('click', () => {
+                // 1) 상황관리 체크리스트 초기화
                 checkedItemsStore.clear();
                 selectedCategoryItem = null;
+                backToChecklistCategories();
+
+                // 2) 소방 특수차 현황 초기화
+                isAllVehiclesExpanded = false;
+                if (toggleAllVehiclesBtn) toggleAllVehiclesBtn.textContent = '전체 펼치기';
+                renderSpecialVehicles();
+                setupSpecialVehicleEvents();
+
+                // 3) 건축물 / 시설물(터널, 대교 등) 정보 초기화
+                if (facilitySearchInput) facilitySearchInput.value = '';
+                currentLotBuildingMatches = [];
+                ['facilityLoadingIndicator', 'facilityResultContainer', 'facilitySubwayResultContainer', 'facilityBuildingResultContainer', 'facilityMultiMatchContainer', 'facilityNoResultBox'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                ['facilityMultiMatchList', 'bldLedgerTopListBody', 'bldLedgerFloorBody'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '';
+                });
+
+                // 4) 위험물 통합검색 초기화
+                if (hazmatSearchInput) hazmatSearchInput.value = '';
+                ['hazmatLoadingIndicator', 'hazmatResultContainer', 'hazmatNoResultBox'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+
+                // 5) 층별 현황 초기화
                 Object.assign(floorState, getDefaultFloorState());
-                casualtyState = getDefaultCasualtyState();
-                openModalId = null;
-                try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+                if (inputFloorRatio) inputFloorRatio.value = floorState.floorRatioStr;
+                if (syncAllRoomsCheck) syncAllRoomsCheck.checked = false;
+                if (partialSettingCheck) partialSettingCheck.checked = false;
+                if (partialInputsContainer) partialInputsContainer.style.display = 'none';
+                [partialFloorStart, partialFloorEnd, partialRoomStart, partialRoomEnd].forEach(inp => {
+                    if (inp) inp.value = '';
+                });
+                updateFloorBannerTitle();
                 renderTable();
                 calculateStatsAndSummary();
+
+                // 6) 사상자 현황 초기화
+                casualtyState = getDefaultCasualtyState();
                 renderCasualtyTable();
                 calculateCasualtyStats();
+
+                // 열려있는 모달 상태 및 로컬스토리지 초기화
+                openModalId = null;
+                ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal'].forEach(id => {
+                    const m = document.getElementById(id);
+                    if (m) m.classList.add('hidden');
+                });
+                try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
                 closeModal(resetModal);
-                showToast('모든 내용이 초기 상태로 리셋되었습니다.');
+                showToast('모든 메뉴의 조회 및 입력 내용이 초기 상태로 리셋되었습니다.');
             });
         }
 
