@@ -3146,18 +3146,19 @@
 
                             <!-- 2. 건축물 표제부 상세 표 -->
                             <div id="bldLedgerDetailSection" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
-                                <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <div id="bldLedgerDetailSectionTitle" style="font-size: 15px; font-weight: 900; color: #1e3a8a;">· 일반건축물</div>
-                                    <span id="bldLedgerFlrBadge" style="font-size: 13.5px; font-weight: 900; color: #1d4ed8; background: #eff6ff; border: 1.5px solid #60a5fa; padding: 4px 11px; border-radius: 8px; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.12);">지상 -층 / 지하 -층</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                                    <div id="bldLedgerDetailSectionTitle" style="font-size: 15px; font-weight: 900; color: #1e3a8a;">· 내용</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        <span id="bldLedgerAptHallBadge" style="display: none; font-size: 13.5px; font-weight: 900; color: #047857; background: #ecfdf5; border: 1.5px solid #10b981; padding: 4px 11px; border-radius: 8px; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.14);">복도식</span>
+                                        <span id="bldLedgerFlrBadge" style="font-size: 13.5px; font-weight: 900; color: #1d4ed8; background: #eff6ff; border: 1.5px solid #60a5fa; padding: 4px 11px; border-radius: 8px; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.12);">지상 -층 / 지하 -층</span>
+                                    </div>
                                 </div>
                                 <div style="overflow-x: auto; border-top: 2px solid #94a3b8; border-bottom: 1px solid #cbd5e1;">
                                     <table class="bld-ledger-grid-table">
                                         <tbody>
                                             <tr>
                                                 <th>대지위치</th>
-                                                <td colspan="3" id="bldCellPlatPlc">-</td>
-                                                <th>지번</th>
-                                                <td id="bldCellJibun">-</td>
+                                                <td colspan="5" id="bldCellPlatPlc">-</td>
                                             </tr>
                                             <tr>
                                                 <th>도로명주소</th>
@@ -12971,7 +12972,7 @@
             // 2) 법정동 + 산 여부 + 본번(bun) + 부번(ji) 정밀 추출
             // 예: "서울특별시 마포구 성산동 200-1", "강남구 압구정동 산 12-3", "용산동2가 1-23", "명륜3가 53"
             const jibunCandidates = [explicitJibunLine, roadOrJibunAddr || '', combined];
-            const dongBunJiRegex = /([가-힣]+(?:\d+가)?동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
+            const dongBunJiRegex = /([가-힣]+(?:\d+가)?\d*동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
 
             for (const src of jibunCandidates) {
                 if (!src) continue;
@@ -12995,7 +12996,7 @@
 
             // 3) 괄호 안에 법정동이 표기된 도로명주소 (예: "마포구 월드컵로 207 (성산동)" 또는 "(성산동, 성산시영아파트)")에서 법정동코드 추출
             if (!bjdongCd) {
-                const parenDongRegex = /\(\s*([가-힣]+(?:\d+가)?동|[가-힣]+\d+가)(?:\s*[,\)]|\s+(\d{1,4})(?:-(\d{1,4}))?)/;
+                const parenDongRegex = /\(\s*([가-힣]+(?:\d+가)?\d*동|[가-힣]+\d+가)(?:\s*[,\)]|\s+(\d{1,4})(?:-(\d{1,4}))?)/;
                 const pm = combined.match(parenDongRegex);
                 if (pm && pm[1]) {
                     const resSgBj = lookupSigunguAndBjdong(sigunguCd, pm[1].trim());
@@ -13500,8 +13501,449 @@
 
         
 
-        // 첨부파일 (스프링클러 설비.pdf, 33쪽) 기준에 맞춘 정밀 스프링클러 설치기준 판별 함수 오버라이드
-        function evaluateSprinklerByLawAndUsage(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null) {
+        const facilityModal = document.getElementById('facilityModal');
+        const facilityModalOpenBtn = document.getElementById('facilityModalOpenBtn');
+        const facilityCloseBtn = document.getElementById('facilityCloseBtn');
+        const facilityCloseXBtn = document.getElementById('facilityCloseXBtn');
+        const saveFacilityImageBtn = document.getElementById('saveFacilityImageBtn');
+        const facilitySearchForm = document.getElementById('facilitySearchForm');
+        const facilitySearchInput = document.getElementById('facilitySearchInput');
+
+        function renderSubwayDetailInFacility(st) {
+            const colorObj = SUBWAY_LINE_COLORS[st.line] || { bg: "#2563eb", border: "#2563eb" };
+            document.getElementById('facSubwayStationHeader').style.borderLeftColor = colorObj.border;
+            const lineBadge = document.getElementById('facSubwayLineBadge');
+            lineBadge.textContent = st.line;
+            lineBadge.style.background = colorObj.bg;
+            document.getElementById('facSubwayStationName').textContent = st.rawName;
+            document.getElementById('facSubwayStationSub').textContent = `${st.line} · 서울교통공사 역사 정보`;
+            document.getElementById('facSubwayCodeBadge').textContent = `역번호: ${st.code}`;
+            document.getElementById('facSubwayRoadAddr').textContent = st.roadAddress;
+            document.getElementById('facSubwayJibunAddr').textContent = st.jibunAddress;
+            document.getElementById('facSubwayPhoneText').textContent = st.phone;
+            document.getElementById('facSubwayPhoneLink').href = `tel:${st.phone}`;
+
+            const archGrid = document.getElementById('facSubwayArchGrid');
+            if (st.arch) {
+                const a = st.arch;
+                const areaFormatted = a["연면적"] && !isNaN(Number(a["연면적"])) ? `${Number(a["연면적"]).toLocaleString()} ㎡` : (a["연면적"] || "-");
+                const archItems = [
+                    { label: "층수", value: a["층수"] || "-" },
+                    { label: "연면적", value: areaFormatted },
+                    { label: "개통일", value: a["개통일"] || "-" },
+                    { label: "승강장 길이", value: a["승강장연장"] ? `${a["승강장연장"]} m` : "-" }
+                ];
+                archGrid.innerHTML = archItems.map(item => `<div class="subway-arch-item"><span style="font-size: 11px; color: #64748b; font-weight: 800;">${item.label}</span><span style="font-size: 13px; color: #0f172a; font-weight: 900;">${item.value}</span></div>`).join('');
+            } else {
+                archGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12px; color: #64748b; padding: 6px;">해당 역의 건축정보 데이터가 없습니다.</div>`;
+            }
+
+            const mapImg = document.getElementById('facSubwayMapImg');
+            const mapAnchor = document.getElementById('facSubwayMapAnchor');
+            const urls = [...(st.mapCandidates || [])];
+            let tryIdx = 0;
+            mapImg.style.display = 'block';
+            function tryNextUrl() {
+                if (tryIdx < urls.length) {
+                    const curUrl = urls[tryIdx++];
+                    mapAnchor.href = curUrl;
+                    mapImg.src = curUrl;
+                } else {
+                    const svgUri = createSubwaySvgGuideMapDataUri(st);
+                    mapImg.onerror = null;
+                    mapAnchor.href = urls[0] || "#";
+                    mapImg.src = svgUri;
+                }
+            }
+            mapImg.onerror = tryNextUrl;
+            tryNextUrl();
+        }
+
+        document.getElementById('facBtnCopyRoad')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayRoadAddr').textContent, '도로명주소가 복사되었습니다.'));
+        document.getElementById('facBtnCopyJibun')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayJibunAddr').textContent, '지번주소가 복사되었습니다.'));
+        document.getElementById('facBtnCopyPhone')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayPhoneText').textContent, '전화번호가 복사되었습니다.'));
+
+        // 첨부파일 최신 시설물/건축물 통합 검색 모듈 이식 (단독 툴킷 호환 상태 변수)
+        let facilityModalMode = 'facility';
+        let currentTabFacilityState = {
+            query: '',
+            hasSearched: false,
+            noResult: false,
+            activeMatchIndex: 0,
+            matches: [],
+            selectedItem: null,
+            userSelectedDong: false
+        };
+
+        // === 건축물·소방시설 통합 검색 모듈 (툴킷 이식) ===
+        function lookupSigunguAndBjdong(sigunguCd, dongName) {
+            if (!dongName) return { sigunguCd: sigunguCd || '', bjdongCd: '' };
+            const cleanDong = dongName.trim();
+            const candidates = [cleanDong];
+            const stripped = cleanDong.replace(/\d+동$/, '동').replace(/본동$/, '동');
+            if (stripped !== cleanDong) candidates.push(stripped);
+
+            for (const c of candidates) {
+                if (sigunguCd && GU_BJDONG_MAP[sigunguCd] && GU_BJDONG_MAP[sigunguCd][c]) {
+                    return { sigunguCd, bjdongCd: GU_BJDONG_MAP[sigunguCd][c] };
+                }
+            }
+            for (const c of candidates) {
+                for (const [sg, guMap] of Object.entries(GU_BJDONG_MAP)) {
+                    if (guMap[c]) return { sigunguCd: sg, bjdongCd: guMap[c] };
+                }
+            }
+            return { sigunguCd: sigunguCd || '', bjdongCd: '' };
+        }
+
+        async function resolveAddressCodesForFacility(roadOrJibunAddr, rawMapText = '', fullContext = '') {
+            let sigunguCd = '';
+            let bjdongCd = '';
+            let bun = '';
+            let ji = '';
+            let platGbCd = '0'; // 0: 대지, 1: 산
+            let bldNameHint = '';
+            let targetDongNum = ''; // 예: "31" (31동), "201" (201동)
+
+            const jibunLineM = (rawMapText || '').match(/법정동주소[ \t:]*([^\r\n]*)/);
+            const roadLineM = (rawMapText || '').match(/도로명주소[ \t:]*([^\r\n]*)/);
+            const explicitJibunLine = jibunLineM ? jibunLineM[1].replace(/(?:도로명주소|취약지역|관할서|재난종별).*$/, '').trim() : '';
+            const rawRoadCandidate = roadLineM ? roadLineM[1].replace(/(?:취약지역|법정동주소|관할서|재난종별).*$/, '').trim() : '';
+            const explicitRoadLine = /^(?:취약지역|취약대상|관할서|재난종별|신고접수|출동지령|현장도착|내용|-|없음)$/.test(rawRoadCandidate) ? '' : rawRoadCandidate;
+            const fullSearchContext = `${fullContext || ''} ${rawMapText || ''} ${roadOrJibunAddr || ''}`;
+            const combined = `${explicitJibunLine} ${explicitRoadLine} ${roadOrJibunAddr || ''} ${fullSearchContext}`.trim();
+
+            // 1) 시군구코드 추출 (2번 도로명주소 -> 안전지도 법정동주소 -> 1번 구/동 명칭 순으로 확인)
+            const priorityGuSources = [roadOrJibunAddr || '', explicitJibunLine, explicitRoadLine, rawMapText || ''];
+            for (const src of priorityGuSources) {
+                if (!src) continue;
+                for (const [gu, code] of Object.entries(SIGUNGU_CODE_MAP)) {
+                    const guReg = new RegExp(`(?:^|\\s|서울특별시|서울시)${gu}(?:\\s|$)`);
+                    if (guReg.test(src) || src.includes(gu)) {
+                        sigunguCd = code;
+                        break;
+                    }
+                }
+                if (sigunguCd) break;
+            }
+
+            // 2) 법정동 + 산 여부 + 본번(bun) + 부번(ji) 정밀 추출
+            // 예: "서울특별시 마포구 성산동 200-1", "강남구 압구정동 산 12-3", "용산동2가 1-23", "명륜3가 53"
+            const jibunCandidates = [explicitJibunLine, roadOrJibunAddr || '', combined];
+            const dongBunJiRegex = /([가-힣]+(?:\d+가)?\d*동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
+
+            for (const src of jibunCandidates) {
+                if (!src) continue;
+                dongBunJiRegex.lastIndex = 0;
+                let m;
+                while ((m = dongBunJiRegex.exec(src)) !== null) {
+                    const candDong = m[1].trim();
+                    const resSgBj = lookupSigunguAndBjdong(sigunguCd, candDong);
+                    const code = resSgBj.bjdongCd;
+                    if (code) {
+                        if (!sigunguCd && resSgBj.sigunguCd) sigunguCd = resSgBj.sigunguCd;
+                        bjdongCd = code;
+                        platGbCd = m[2] ? '1' : '0';
+                        bun = m[3];
+                        ji = m[4] || '0';
+                        break;
+                    }
+                }
+                if (bjdongCd && bun) break;
+            }
+
+            // 3) 괄호 안에 법정동이 표기된 도로명주소 (예: "마포구 월드컵로 207 (성산동)" 또는 "(성산동, 성산시영아파트)")에서 법정동코드 추출
+            if (!bjdongCd) {
+                const parenDongRegex = /\(\s*([가-힣]+(?:\d+가)?\d*동|[가-힣]+\d+가)(?:\s*[,\)]|\s+(\d{1,4})(?:-(\d{1,4}))?)/;
+                const pm = combined.match(parenDongRegex);
+                if (pm && pm[1]) {
+                    const resSgBj = lookupSigunguAndBjdong(sigunguCd, pm[1].trim());
+                    const code = resSgBj.bjdongCd;
+                    if (code) {
+                        if (!sigunguCd && resSgBj.sigunguCd) sigunguCd = resSgBj.sigunguCd;
+                        bjdongCd = code;
+                        if (!bun && pm[2]) {
+                            bun = pm[2];
+                            ji = pm[3] || '0';
+                        }
+                    }
+                }
+            }
+
+            // 4) 여전히 법정동코드가 없으면 텍스트 내 모든 법정동 이름 매칭
+            if (!bjdongCd && sigunguCd && GU_BJDONG_MAP[sigunguCd]) {
+                for (const [dongName, code] of Object.entries(GU_BJDONG_MAP[sigunguCd])) {
+                    if (combined.includes(dongName)) {
+                        bjdongCd = code;
+                        break;
+                    }
+                }
+            }
+
+            // 5) [우선순위 동(Dong) 추출: 1순위 2번 도로명주소 -> 2순위 4번 신고내용 -> 3순위 안전지도 법정동주소/원문]
+            const sec1Val = '';
+            targetDongNum = extractTargetDong(roadOrJibunAddr);
+            if (!targetDongNum && sec1Val) {
+                targetDongNum = extractTargetDong(sec1Val);
+            }
+            if (!targetDongNum && explicitJibunLine) {
+                targetDongNum = extractTargetDong(explicitJibunLine);
+            }
+            if (!targetDongNum) {
+                targetDongNum = extractTargetDong(rawMapText);
+            }
+
+            // 6) [우선순위 건물명/단지명 힌트 추출: 1순위 2번 도로명주소 -> 2순위 4번 신고내용 -> 3순위 안전지도 법정동주소/원문]
+            bldNameHint = extractBldNameHint(roadOrJibunAddr);
+            if (!bldNameHint && sec1Val) {
+                bldNameHint = extractBldNameHint(sec1Val);
+            }
+            if (!bldNameHint && explicitJibunLine) {
+                bldNameHint = extractBldNameHint(explicitJibunLine);
+            }
+            if (!bldNameHint) {
+                bldNameHint = extractBldNameHint(rawMapText);
+            }
+
+            // 7) 도로명주소만 있고 지번(bun/ji)이나 법정동코드(bjdongCd)가 없을 때:
+            //    VWorld / 행안부 / OSM 지오코딩으로 도로명주소에 매칭되는 정확한 법정동 + 본번/부번을 획득
+            const queryRoadAddr = (roadOrJibunAddr || explicitRoadLine || explicitJibunLine).trim();
+            const candidateLots = [];
+            const pushLot = (sg, bj, pg, b, j) => {
+                if (!sg || !bj || !b) return;
+                const bPad = String(b).padStart(4, '0');
+                const jPad = String(j || '0').padStart(4, '0');
+                const pgVal = pg || '0';
+                if (!candidateLots.some(x => x.sigunguCd === sg && x.bjdongCd === bj && x.bun === bPad && x.ji === jPad)) {
+                    candidateLots.push({ sigunguCd: sg, bjdongCd: bj, platGbCd: pgVal, bun: bPad, ji: jPad });
+                }
+            };
+
+            if (queryRoadAddr && (!sigunguCd || !bjdongCd || !bun)) {
+                // 7-0) Postcodify 무료 도로명/지번 API (신주소/구주소 -> 정확한 서울 법정동+본번+부번 변환)
+                const cleanPostQ = queryRoadAddr
+                    .replace(/,.*$/, '')
+                    .replace(/\([^)]*\)/g, '')
+                    .replace(/\b\d{1,4}동\b.*$/, '')
+                    .replace(/\b\d{1,4}호\b.*$/, '')
+                    .trim();
+                const postEndpoints = [
+                    `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(/^서울/.test(cleanPostQ) ? cleanPostQ : '서울 ' + cleanPostQ)}&v=3.0`,
+                    `https://api.poesis.co.kr/post/search.php?q=${encodeURIComponent(/^서울/.test(cleanPostQ) ? cleanPostQ : '서울 ' + cleanPostQ)}&v=3.0`
+                ];
+                const fetchFastPost = async (pUrl) => {
+                    const ctrl = new AbortController();
+                    const tId = setTimeout(() => ctrl.abort(), 2500);
+                    try {
+                        const res = await fetch(pUrl, { signal: ctrl.signal });
+                        clearTimeout(tId);
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const pJson = await res.json();
+                        if (!Array.isArray(pJson?.results) || pJson.results.length === 0) throw new Error('Empty');
+                        return pJson;
+                    } catch (e) {
+                        clearTimeout(tId);
+                        throw e;
+                    }
+                };
+                let fastPostJson = null;
+                try { fastPostJson = await Promise.any(postEndpoints.map(fetchFastPost)); } catch (e) {}
+                if (!fastPostJson) {
+                    const proxyPostUrls = [
+                        `https://api.allorigins.win/raw?url=${encodeURIComponent(postEndpoints[0])}`,
+                        `https://corsproxy.io/?${encodeURIComponent(postEndpoints[0])}`
+                    ];
+                    try { fastPostJson = await Promise.any(proxyPostUrls.map(fetchFastPost)); } catch (e) {}
+                }
+                for (const pJson of (fastPostJson ? [fastPostJson] : [])) {
+                    try {
+                        {
+                            const rows = Array.isArray(pJson?.results) ? pJson.results : [];
+                            const seoulRows = rows.filter(r => JSON.stringify(r).includes('서울'));
+                            const targetRows = seoulRows.length > 0 ? seoulRows : rows;
+                            for (const r of targetRows.slice(0, 8)) {
+                                const flatStr = [r.ko_common, r.ko_jibeon, r.ko_doro, r.other_addresses].filter(Boolean).join(' ');
+                                let rowSg = sigunguCd || '';
+                                for (const [gu, code] of Object.entries(SIGUNGU_CODE_MAP)) {
+                                    if (flatStr.includes(gu)) { rowSg = code; break; }
+                                }
+                                dongBunJiRegex.lastIndex = 0;
+                                let dm;
+                                while ((dm = dongBunJiRegex.exec(flatStr)) !== null) {
+                                    const resSgBj = lookupSigunguAndBjdong(rowSg, dm[1].trim());
+                                    if (resSgBj.bjdongCd && resSgBj.sigunguCd) {
+                                        const pg = dm[2] ? '1' : '0';
+                                        const b = dm[3];
+                                        const j = dm[4] || '0';
+                                        pushLot(resSgBj.sigunguCd, resSgBj.bjdongCd, pg, b, j);
+                                        if (!sigunguCd) sigunguCd = resSgBj.sigunguCd;
+                                        if (!bjdongCd) bjdongCd = resSgBj.bjdongCd;
+                                        if (!bun) { platGbCd = pg; bun = b; ji = j; }
+                                    }
+                                }
+                            }
+                            if (candidateLots.length > 0) break;
+                        }
+                    } catch (e) {}
+                }
+                const cleanQ = queryRoadAddr
+                    .replace(/,.*$/, '')
+                    .replace(/\([^)]*\)/g, '')
+                    .replace(/\b\d{1,4}동\b.*$/, '')
+                    .replace(/\b\d{1,4}호\b.*$/, '')
+                    .trim();
+
+                try {
+                    const osmUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent('서울특별시 ' + cleanQ)}&format=json&addressdetails=1&limit=3`;
+                    const controller = new AbortController();
+                    const tId = setTimeout(() => controller.abort(), 2800);
+                    const res = await fetch(osmUrl, { signal: controller.signal, headers: { 'Accept-Language': 'ko' } });
+                    clearTimeout(tId);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            for (const item of data) {
+                                const disp = item.display_name || '';
+                                const addrObj = item.address || {};
+                                if (!sigunguCd) {
+                                    for (const [gu, code] of Object.entries(SIGUNGU_CODE_MAP)) {
+                                        if (disp.includes(gu) || addrObj.borough === gu || addrObj.city_district === gu) {
+                                            sigunguCd = code;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!bjdongCd) {
+                                    const suburb = addrObj.suburb || addrObj.quarter || addrObj.neighbourhood || '';
+                                    if (suburb) {
+                                        const c = lookupBjdongCode(sigunguCd, suburb);
+                                        if (c) bjdongCd = c;
+                                    }
+                                    if (!bjdongCd && sigunguCd && GU_BJDONG_MAP[sigunguCd]) {
+                                        for (const [dong, code] of Object.entries(GU_BJDONG_MAP[sigunguCd])) {
+                                            if (disp.includes(dong)) {
+                                                bjdongCd = code;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (sigunguCd && bjdongCd) break;
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            const candidateBjdongs = [];
+            const pushCand = (sg, bj) => {
+                if (!sg || !bj) return;
+                if (!candidateBjdongs.some(c => c.sigunguCd === sg && c.bjdongCd === bj)) {
+                    candidateBjdongs.push({ sigunguCd: sg, bjdongCd: bj });
+                }
+            };
+            if (sigunguCd && bjdongCd) pushCand(sigunguCd, bjdongCd);
+
+            if (queryRoadAddr && !bun) {
+                const roadOnlyM = queryRoadAddr.match(/([가-힣0-9]+(?:대로|로|길)(?:\d+길)?)/);
+                const roadOnly = roadOnlyM ? roadOnlyM[1] : '';
+                const collectFromAddrText = (disp, addrObj = {}) => {
+                    let sg = sigunguCd || '';
+                    for (const [gu, code] of Object.entries(SIGUNGU_CODE_MAP)) {
+                        if (disp.includes(gu) || addrObj.borough === gu || addrObj.city_district === gu) {
+                            sg = code;
+                            if (!sigunguCd) sigunguCd = code;
+                            break;
+                        }
+                    }
+                    const dCand = [addrObj.suburb, addrObj.quarter, addrObj.neighbourhood, addrObj.village].filter(Boolean);
+                    for (const d of dCand) {
+                        const c = lookupBjdongCode(sg, d);
+                        if (c) {
+                            if (!bjdongCd) bjdongCd = c;
+                            pushCand(sg, c);
+                        }
+                    }
+                    if (sg && GU_BJDONG_MAP[sg]) {
+                        for (const [dong, code] of Object.entries(GU_BJDONG_MAP[sg])) {
+                            if (disp.includes(dong)) {
+                                if (!bjdongCd) bjdongCd = code;
+                                pushCand(sg, code);
+                            }
+                        }
+                    }
+                };
+
+                if (roadOnly && candidateBjdongs.length === 0) {
+                    try {
+                        const osmRoadUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent('서울특별시 ' + roadOnly)}&format=json&addressdetails=1&limit=10`;
+                        const controller = new AbortController();
+                        const tId = setTimeout(() => controller.abort(), 3000);
+                        const res = await fetch(osmRoadUrl, { signal: controller.signal, headers: { 'Accept-Language': 'ko' } });
+                        clearTimeout(tId);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (Array.isArray(data)) {
+                                data.forEach(item => collectFromAddrText(item.display_name || '', item.address || {}));
+                            }
+                        }
+                    } catch (e) {}
+                }
+
+                if (candidateBjdongs.length === 0) {
+                    try {
+                        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent('서울 ' + (roadOnly || queryRoadAddr))}&limit=6`;
+                        const controller = new AbortController();
+                        const tId = setTimeout(() => controller.abort(), 3000);
+                        const res = await fetch(photonUrl, { signal: controller.signal });
+                        clearTimeout(tId);
+                        if (res.ok) {
+                            const pData = await res.json();
+                            if (pData && Array.isArray(pData.features)) {
+                                pData.features.forEach(f => {
+                                    const p = f.properties || {};
+                                    const disp = [p.city, p.district, p.county, p.locality, p.street, p.name].filter(Boolean).join(' ');
+                                    collectFromAddrText(disp, { borough: p.district || p.county, suburb: p.locality || p.suburb });
+                                });
+                            }
+                        }
+                    } catch (e) {}
+                }
+
+                if (roadOnly) {
+                    const stem = roadOnly.replace(/(?:\d+번?길|대로|로|길).*$/, '').trim();
+                    if (stem.length >= 2) {
+                        for (const [sg, guMap] of Object.entries(GU_BJDONG_MAP)) {
+                            if (sigunguCd && sg !== sigunguCd) continue;
+                            for (const [dongName, bj] of Object.entries(guMap)) {
+                                const dongStem = dongName.replace(/(?:\d+가|동)$/, '');
+                                if (dongStem && (stem === dongStem || stem.startsWith(dongStem))) {
+                                    if (!sigunguCd) sigunguCd = sg;
+                                    if (!bjdongCd) bjdongCd = bj;
+                                    pushCand(sg, bj);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return {
+                sigunguCd: sigunguCd || '11680',
+                bjdongCd: bjdongCd || '',
+                candidateBjdongs,
+                candidateLots,
+                platGbCd,
+                bun: bun ? bun.padStart(4, '0') : '',
+                ji: (ji || '0').padStart(4, '0'),
+                bldNameHint,
+                targetDongNum
+            };
+        }
+
+        // 안전지도 텍스트 및 주소에서 아파트/건물 타겟 동 번호(예: 112동, 제112동 -> 112) 정밀 추출 (법정동인 '대치동' 등과 엄격 분리)
+
+        function evaluateSprinklerForFacilityModal(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null) {
             let ymd = parseInt(String(useAprDay || '').replace(/\D/g, '').substring(0, 8), 10) || 0;
             const isUnknownDate = (ymd < 19000101);
             if (isUnknownDate) ymd = 20260101;
@@ -13817,6 +14259,7 @@
         }
 
         // 첨부파일 (스프링클러 설비.pdf, 1~33쪽) 기준 건축물 적용 소방시설 전체 판별 함수
+
         function evaluateAllFireFacilities(it, ledgerType, combinedContext, bldNameHint, flrItems, spEval) {
             const grndFlr = parseInt(it.grndFlrCnt || '0', 10) || 0;
             const ugrndFlr = parseInt(it.ugrndFlrCnt || '0', 10) || 0;
@@ -14177,69 +14620,7 @@
             });
         }
 
-        const facilityModal = document.getElementById('facilityModal');
-        const facilityModalOpenBtn = document.getElementById('facilityModalOpenBtn');
-        const facilityCloseBtn = document.getElementById('facilityCloseBtn');
-        const facilityCloseXBtn = document.getElementById('facilityCloseXBtn');
-        const saveFacilityImageBtn = document.getElementById('saveFacilityImageBtn');
-        const facilitySearchForm = document.getElementById('facilitySearchForm');
-        const facilitySearchInput = document.getElementById('facilitySearchInput');
 
-        function renderSubwayDetailInFacility(st) {
-            const colorObj = SUBWAY_LINE_COLORS[st.line] || { bg: "#2563eb", border: "#2563eb" };
-            document.getElementById('facSubwayStationHeader').style.borderLeftColor = colorObj.border;
-            const lineBadge = document.getElementById('facSubwayLineBadge');
-            lineBadge.textContent = st.line;
-            lineBadge.style.background = colorObj.bg;
-            document.getElementById('facSubwayStationName').textContent = st.rawName;
-            document.getElementById('facSubwayStationSub').textContent = `${st.line} · 서울교통공사 역사 정보`;
-            document.getElementById('facSubwayCodeBadge').textContent = `역번호: ${st.code}`;
-            document.getElementById('facSubwayRoadAddr').textContent = st.roadAddress;
-            document.getElementById('facSubwayJibunAddr').textContent = st.jibunAddress;
-            document.getElementById('facSubwayPhoneText').textContent = st.phone;
-            document.getElementById('facSubwayPhoneLink').href = `tel:${st.phone}`;
-
-            const archGrid = document.getElementById('facSubwayArchGrid');
-            if (st.arch) {
-                const a = st.arch;
-                const areaFormatted = a["연면적"] && !isNaN(Number(a["연면적"])) ? `${Number(a["연면적"]).toLocaleString()} ㎡` : (a["연면적"] || "-");
-                const archItems = [
-                    { label: "층수", value: a["층수"] || "-" },
-                    { label: "연면적", value: areaFormatted },
-                    { label: "개통일", value: a["개통일"] || "-" },
-                    { label: "승강장 길이", value: a["승강장연장"] ? `${a["승강장연장"]} m` : "-" }
-                ];
-                archGrid.innerHTML = archItems.map(item => `<div class="subway-arch-item"><span style="font-size: 11px; color: #64748b; font-weight: 800;">${item.label}</span><span style="font-size: 13px; color: #0f172a; font-weight: 900;">${item.value}</span></div>`).join('');
-            } else {
-                archGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12px; color: #64748b; padding: 6px;">해당 역의 건축정보 데이터가 없습니다.</div>`;
-            }
-
-            const mapImg = document.getElementById('facSubwayMapImg');
-            const mapAnchor = document.getElementById('facSubwayMapAnchor');
-            const urls = [...(st.mapCandidates || [])];
-            let tryIdx = 0;
-            mapImg.style.display = 'block';
-            function tryNextUrl() {
-                if (tryIdx < urls.length) {
-                    const curUrl = urls[tryIdx++];
-                    mapAnchor.href = curUrl;
-                    mapImg.src = curUrl;
-                } else {
-                    const svgUri = createSubwaySvgGuideMapDataUri(st);
-                    mapImg.onerror = null;
-                    mapAnchor.href = urls[0] || "#";
-                    mapImg.src = svgUri;
-                }
-            }
-            mapImg.onerror = tryNextUrl;
-            tryNextUrl();
-        }
-
-        document.getElementById('facBtnCopyRoad')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayRoadAddr').textContent, '도로명주소가 복사되었습니다.'));
-        document.getElementById('facBtnCopyJibun')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayJibunAddr').textContent, '지번주소가 복사되었습니다.'));
-        document.getElementById('facBtnCopyPhone')?.addEventListener('click', () => copySubwayTextToClipboard(document.getElementById('facSubwayPhoneText').textContent, '전화번호가 복사되었습니다.'));
-
-        // 건축물 + 스프링클러 상세 렌더링
         const BLD_HUB_FLR_API_URL = 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrFlrOulnInfo';
         const BLD_HUB_JIJIGU_API_URL = 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrJijiguInfo';
 
@@ -14285,26 +14666,38 @@
             return [];
         };
 
-        const fetchOpenApiItemsWithFallback = async (urls, timeoutMs = 5500) => {
-            const wrappers = [
-                (u) => u,
+        const fetchOpenApiItemsWithFallback = async (urls, timeoutMs = 3500) => {
+            const fetchSingle = async (targetUrl, ms) => {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), ms);
+                try {
+                    const res = await fetch(targetUrl, { signal: ctrl.signal });
+                    clearTimeout(timer);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const text = await res.text();
+                    const isValidApiPayload = text.includes('<response>') || text.includes('"response"') || text.includes('<items') || text.includes('<totalCount>');
+                    if (!isValidApiPayload) throw new Error('Invalid payload');
+                    return { valid: true, items: parseOpenApiItems(text) };
+                } catch (e) {
+                    clearTimeout(timer);
+                    throw e;
+                }
+            };
+            const proxyWrappers = [
                 (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
                 (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
             ];
             for (const qUrl of urls) {
-                for (const wrap of wrappers) {
-                    try {
-                        const ctrl = new AbortController();
-                        const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-                        const res = await fetch(wrap(qUrl), { signal: ctrl.signal });
-                        clearTimeout(timer);
-                        if (res.ok) {
-                            const text = await res.text();
-                            const items = parseOpenApiItems(text);
-                            if (items.length > 0) return items;
-                        }
-                    } catch (e) {}
-                }
+                try {
+                    const direct = await fetchSingle(qUrl, Math.max(timeoutMs, 5500));
+                    if (direct.items.length > 0) return direct.items;
+                    // 직접 API 호출이 정상 응답(0건)한 경우 동일 URL을 프록시로 재시도하지 않고 다음 URL로 즉시 이동
+                    continue;
+                } catch (e) {}
+                try {
+                    const proxyRes = await Promise.any(proxyWrappers.map(w => fetchSingle(w(qUrl), Math.min(timeoutMs, 3500))));
+                    if (proxyRes && proxyRes.items.length > 0) return proxyRes.items;
+                } catch (e) {}
             }
             return [];
         };
@@ -14313,6 +14706,102 @@
         let currentFacilitySelectedBld = null;
         const bldHighlightedFloorsMap = new Map();
         let currentRenderedBldKey = '';
+        let lastRenderedBldQuery = '';
+
+        function isApartmentForHallBadge(it, ledgerType, bldNm) {
+            const txt = `${it?.mainPurpsCdNm || ''} ${it?.etcPurps || ''} ${bldNm || ''}`;
+            if (/도시형생활주택|오피스텔|다세대|연립|다가구|단독주택/.test(txt) && ledgerType !== '아파트' && !/아파트/.test(txt)) {
+                return false;
+            }
+            if (ledgerType === '아파트' || /아파트/.test(txt)) return true;
+            const hhld = parseInt(it?.hhldCnt || '0', 10) || 0;
+            const grnd = parseInt(it?.grndFlrCnt || '0', 10) || 0;
+            if (String(it?.mainPurpsCdNm || '').includes('공동주택') && (hhld >= 20 || grnd >= 5)) return true;
+            return false;
+        }
+
+        function normalizeHallTypeName(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            if (s.includes('복도')) return '복도식';
+            if (s.includes('계단')) return '계단식';
+            if (s.includes('혼합') || s.includes('복합') || s.includes('타워')) return '복합식';
+            return '';
+        }
+
+        function detectApartmentHallType(it, ledgerType, bldNm, flrItems = null) {
+            if (!isApartmentForHallBadge(it, ledgerType, bldNm)) return '';
+            const explicitText = `${it?.etcPurps || ''} ${bldNm || ''}`;
+            const explicitMatch = normalizeHallTypeName(explicitText);
+            if (explicitMatch) return explicitMatch;
+
+            const hhld = parseInt(it?.hhldCnt || '0', 10) || 0;
+            const grnd = parseInt(it?.grndFlrCnt || '0', 10) || 0;
+            const rideElvt = parseInt(it?.rideUseElvtCnt || '0', 10) || 0;
+            const emgElvt = parseInt(it?.emgenUseElvtCnt || '0', 10) || 0;
+            const useAprYear = parseInt(String(it?.useAprDay || '').replace(/\D/g, '').substring(0, 4), 10) || 0;
+
+            let resFloors = grnd;
+            if (Array.isArray(flrItems) && flrItems.length > 0) {
+                const aptFlrSet = new Set();
+                flrItems.forEach(f => {
+                    const gb = String(f.flrGbCd || '').trim();
+                    const gbNm = String(f.flrGbCdNm || '').trim();
+                    if (gb === '10' || gbNm.includes('지하') || gb === '30' || gbNm.includes('옥탑')) return;
+                    const pTxt = `${f.mainPurpsCdNm || ''} ${f.etcPurps || ''}`;
+                    if (/아파트|공동주택/.test(pTxt) && !/근린|판매|주차|관리|경로당|어린이/.test(pTxt)) {
+                        aptFlrSet.add(String(f.flrNo || f.flrNoNm || ''));
+                    }
+                });
+                if (aptFlrSet.size > 0) resFloors = aptFlrSet.size;
+            }
+            if (hhld <= 0 || resFloors <= 0) return '계단식';
+
+            const hhldPerFloor = hhld / resFloors;
+            const coreCnt = rideElvt > 0 ? rideElvt : (emgElvt > 0 ? emgElvt : 0);
+
+            if (coreCnt === 0) {
+                // 저층(승강기 없음): 층당 6세대 이상이면 복도식, 아니면 계단식
+                return hhldPerFloor >= 6 ? '복도식' : '계단식';
+            }
+            const hhldPerCore = hhldPerFloor / coreCnt;
+            if (hhldPerCore >= 5.0) return '복도식';
+            if (hhldPerCore <= 2.6) return '계단식';
+            if (useAprYear > 0 && useAprYear < 1998 && hhldPerCore >= 3.8) return '복도식';
+            return '복합식';
+        }
+
+        async function fetchKaptHallType(sigunguCd, bjdongCd, bldNm, roadAddr) {
+            if (!sigunguCd || !bjdongCd) return '';
+            const bjdCode = `${sigunguCd}${bjdongCd}`;
+            const listUrls = [
+                `https://apis.data.go.kr/1613000/AptListService3/getLegaldongAptList3?bjdCode=${bjdCode}&numOfRows=100&pageNo=1&serviceKey=${BLD_HUB_SERVICE_KEY}`,
+                `https://apis.data.go.kr/1613000/AptListService2/getLegaldongAptList?bjdCode=${bjdCode}&numOfRows=100&pageNo=1&serviceKey=${BLD_HUB_SERVICE_KEY}`
+            ];
+            try {
+                const aptItems = await fetchOpenApiItemsWithFallback(listUrls, 3200);
+                if (!aptItems || aptItems.length === 0) return '';
+                const norm = (s) => String(s || '').replace(/아파트|단지|\s+/g, '').toLowerCase();
+                const targetNorm = norm(bldNm);
+                let matchedApt = null;
+                if (targetNorm) {
+                    matchedApt = aptItems.find(a => norm(a.kaptName) === targetNorm)
+                        || aptItems.find(a => norm(a.kaptName).includes(targetNorm) || targetNorm.includes(norm(a.kaptName)));
+                }
+                if (!matchedApt && aptItems.length === 1) matchedApt = aptItems[0];
+                if (!matchedApt || !matchedApt.kaptCode) return '';
+
+                const basisUrls = [
+                    `https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3?kaptCode=${encodeURIComponent(matchedApt.kaptCode)}&serviceKey=${BLD_HUB_SERVICE_KEY}`,
+                    `https://apis.data.go.kr/1613000/AptBasisInfoService1/getAphusBassInfo?kaptCode=${encodeURIComponent(matchedApt.kaptCode)}&serviceKey=${BLD_HUB_SERVICE_KEY}`
+                ];
+                const basisItems = await fetchOpenApiItemsWithFallback(basisUrls, 3200);
+                if (basisItems && basisItems.length > 0) {
+                    return normalizeHallTypeName(basisItems[0].codeHallNm || '');
+                }
+            } catch (e) {}
+            return '';
+        }
 
         async function renderBuildingDetailInFacility(matchObj, siblingMatches = null, userSelectedDong = false) {
             if (Array.isArray(siblingMatches) && siblingMatches.length > 0) {
@@ -14441,12 +14930,26 @@
             const ledgerType = resolveBuildingLedgerType(it, combinedContext);
             const regstrTitle = (it.regstrGbCdNm || it.regstrKindCdNm || '일반건축물').trim();
             const detailTitleEl = document.getElementById('bldLedgerDetailSectionTitle');
-            if (detailTitleEl) detailTitleEl.textContent = `· ${regstrTitle}`;
+            if (detailTitleEl) detailTitleEl.textContent = '· 내용';
 
             const grnd = parseInt(it.grndFlrCnt || '0', 10) || 0;
             const ugrnd = parseInt(it.ugrndFlrCnt || '0', 10) || 0;
             const flrBadgeEl = document.getElementById('bldLedgerFlrBadge');
             if (flrBadgeEl) flrBadgeEl.textContent = `지상 ${grnd}층 / 지하 ${ugrnd}층`;
+            const aptHallBadgeEl = document.getElementById('bldLedgerAptHallBadge');
+            const isAptBld = isApartmentForHallBadge(it, ledgerType, bldNm || bldNameHint);
+            let initialHallType = isAptBld ? detectApartmentHallType(it, ledgerType, bldNm || bldNameHint, null) : '';
+            if (aptHallBadgeEl) {
+                if (isAptBld && initialHallType) {
+                    aptHallBadgeEl.textContent = initialHallType;
+                    aptHallBadgeEl.style.display = 'inline-flex';
+                } else {
+                    aptHallBadgeEl.style.display = 'none';
+                }
+            }
+            const kaptHallPromise = isAptBld
+                ? fetchKaptHallType(sigunguCd, bjdongCd, bldNm || bldNameHint, it.newPlatPlc || roadFullKeyword).catch(() => '')
+                : Promise.resolve('');
 
             const platBase = (it.platPlc || '').replace(/\s*\d+(?:-\d+)?\s*번지.*$/, '').trim() || (it.platPlc || '-');
             const setCell = (id, val) => {
@@ -14454,8 +14957,17 @@
                 if (el) el.innerHTML = (val !== undefined && val !== null && String(val).trim() !== '') ? val : '&nbsp;';
             };
 
-            setCell('bldCellPlatPlc', platBase);
-            setCell('bldCellJibun', jibunShort);
+            const jibunClean = (jibunShort || '').replace(/번지\s*$/, '').trim();
+            const platBaseClean = (platBase || '').replace(/번지\s*$/, '').trim();
+            let combinedPlatPlc = platBaseClean;
+            if (jibunClean && jibunClean !== '-') {
+                if (!platBaseClean || platBaseClean === '-') {
+                    combinedPlatPlc = jibunClean;
+                } else if (!platBaseClean.endsWith(jibunClean)) {
+                    combinedPlatPlc = `${platBaseClean} ${jibunClean}`;
+                }
+            }
+            setCell('bldCellPlatPlc', combinedPlatPlc || '-');
             setCell('bldCellNewPlatPlc', it.newPlatPlc || roadFullKeyword || '-');
             setCell('bldCellJijigu1', '');
             setCell('bldCellJijigu2', '');
@@ -14506,7 +15018,7 @@
             const totAreaNum = parseFloat(String(it.totArea || '0').replace(/[^0-9.]/g, '')) || 0;
             const archAreaNum = parseFloat(String(it.archArea || '0').replace(/[^0-9.]/g, '')) || 0;
 
-            let lawEval = evaluateSprinklerByLawAndUsage(
+            let lawEval = evaluateSprinklerForFacilityModal(
                 it.mainPurpsCdNm || ledgerType,
                 it.etcPurps || '',
                 useAprRaw,
@@ -14559,8 +15071,7 @@
                 ledgerType: ledgerType || '',
                 sprinklerText: lawEval.text || '',
                 sprinklerDetail: lawEval.detail || '',
-                statusLabel: [it.bldNm, it.dongNm].filter(Boolean).join(' ').trim() || '건축물대장 반영',
-                floorUsageMap: null
+                statusLabel: [it.bldNm, it.dongNm].filter(Boolean).join(' ').trim() || '건축물대장 반영'
             };
             renderFireFacilitiesPanel(evaluateAllFireFacilities(it, ledgerType, combinedContext, bldNameHint || bldNm, null, lawEval));
 
@@ -14594,7 +15105,7 @@
                     it.etcPurps || '',
                     archAreaNum
                 ).catch(() => null)
-            ]).then(([flrItems, jijiguItems, spApiRes]) => {
+            , kaptHallPromise]).then(([flrItems, jijiguItems, spApiRes, kaptHallType]) => {
                 // (A) 층별현황 렌더링
                 let filteredFlr = flrItems || [];
                 if (dongNm && filteredFlr.length > 0) {
@@ -14628,6 +15139,7 @@
                         });
 
                         currentRenderedBldKey = it.mgmBldrgstPk || [sigunguCd, bjdongCd, bunPad, jiPad, bldNm, dongNm].join('|');
+                        lastRenderedBldQuery = (facilitySearchInput ? facilitySearchInput.value.trim() : '') || (it.newPlatPlc || it.platPlc || '').trim();
                         const savedHighlightSet = bldHighlightedFloorsMap.get(currentRenderedBldKey);
                         flrBody.innerHTML = filteredFlr.map((f, idx) => {
                             const gbNm = (f.flrGbCdNm || (f.flrGbCd === '10' ? '지하' : (f.flrGbCd === '30' ? '옥탑' : '지상'))).trim();
@@ -14653,7 +15165,7 @@
                             `;
                         }).join('');
 
-                        // 층별현황 [건축물 조회 내용 불러오기] 연동을 위한 층별 용도 맵 생성
+                        // 6번 층별현황 [건축물 조회 내용 불러오기] 연동을 위한 층별 용도 맵 생성
                         const flrUsageLists = {};
                         filteredFlr.forEach(f => {
                             const gb = String(f.flrGbCd || '').trim();
@@ -14690,6 +15202,15 @@
                     }
                 }
 
+                // (A-2) 아파트 복도유형(복도식/계단식/복합식) K-apt 공식값 우선 반영 및 층별현황 보정
+                if (isAptBld && aptHallBadgeEl && currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
+                    const refinedHall = kaptHallType || detectApartmentHallType(it, ledgerType, bldNm || bldNameHint, filteredFlr) || initialHallType;
+                    if (refinedHall) {
+                        aptHallBadgeEl.textContent = refinedHall;
+                        aptHallBadgeEl.style.display = 'inline-flex';
+                    }
+                }
+
                 // (B) 용도지역 / 용도지구 / 구역 렌더링
                 if (Array.isArray(jijiguItems) && jijiguItems.length > 0) {
                     const j1 = [], j2 = [], j3 = [];
@@ -14709,7 +15230,7 @@
                 }
 
                 // (C) 층별현황(filteredFlr) 바닥면적/용도까지 반영하여 스프링클러 재판별
-                const refinedLawEval = evaluateSprinklerByLawAndUsage(
+                const refinedLawEval = evaluateSprinklerForFacilityModal(
                     it.mainPurpsCdNm || ledgerType,
                     it.etcPurps || '',
                     useAprRaw,
@@ -14726,13 +15247,17 @@
                 const finalSpText = refinedLawEval.text || apiText || lawEval.text;
                 const finalSpDetail = (refinedLawEval.text ? refinedLawEval.detail : (apiDetail || refinedLawEval.detail || lawEval.detail));
                 applySprinklerCardStyle(finalSpText, finalSpDetail);
+                if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
+                    currentFacilitySelectedBld.sprinklerText = finalSpText || '';
+                    currentFacilitySelectedBld.sprinklerDetail = finalSpDetail || '';
+                }
                 renderFireFacilitiesPanel(evaluateAllFireFacilities(it, ledgerType, combinedContext, bldNameHint || bldNm, filteredFlr, { text: finalSpText, detail: finalSpDetail }));
             });
         }
 
         async function searchBuildingsByAddress(query) {
             const combinedContext = query.trim();
-            const { sigunguCd, bjdongCd, candidateBjdongs, candidateLots, platGbCd, bun, ji, bldNameHint, targetDongNum } = await resolveAddressCodes(query, '', combinedContext);
+            const { sigunguCd, bjdongCd, candidateBjdongs, candidateLots, platGbCd, bun, ji, bldNameHint, targetDongNum } = await resolveAddressCodesForFacility(query, '', combinedContext);
             const roadParts = extractRoadAddressParts(query);
             const roadFullKeyword = roadParts.fullRoad || roadParts.roadName;
 
@@ -14769,20 +15294,32 @@
                 return { items: [], totalCount: 0 };
             };
 
+            const searchStartMs = Date.now();
             const fetchPageWithFallback = async (qUrl) => {
-                for (const wrap of fetchWrappers) {
+                if (Date.now() - searchStartMs > 9000) return { items: [], totalCount: 0 };
+                const tryOne = async (targetUrl, ms) => {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), ms);
                     try {
-                        const controller = new AbortController();
-                        const timer = setTimeout(() => controller.abort(), 6500);
-                        const res = await fetch(wrap(qUrl), { signal: controller.signal });
+                        const res = await fetch(targetUrl, { signal: controller.signal });
                         clearTimeout(timer);
-                        if (res.ok) {
-                            const text = await res.text();
-                            const parsed = parseBldHubResponseWithTotal(text);
-                            if (parsed.items.length > 0 || parsed.totalCount > 0) return parsed;
-                        }
-                    } catch (e) {}
-                }
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const text = await res.text();
+                        const isValidApi = text.includes('<response>') || text.includes('"response"') || text.includes('<totalCount>');
+                        if (!isValidApi) throw new Error('Invalid payload');
+                        return parseBldHubResponseWithTotal(text);
+                    } catch (e) {
+                        clearTimeout(timer);
+                        throw e;
+                    }
+                };
+                try {
+                    return await tryOne(qUrl, 5500);
+                } catch (e) {}
+                try {
+                    const proxyCalls = fetchWrappers.slice(1).map(wrap => tryOne(wrap(qUrl), 3500));
+                    return await Promise.any(proxyCalls);
+                } catch (e) {}
                 return { items: [], totalCount: 0 };
             };
 
@@ -14849,9 +15386,10 @@
                             .filter(x => x.isAddressMatched && x.score > 0);
                         matchedItems = matchedItems.concat(valid1);
                     }
-                    if (matchedItems.length === 0 && p1.totalCount > 500) {
-                        const maxPages = Math.min(20, Math.ceil(p1.totalCount / 500));
+                    if (matchedItems.length === 0 && p1.totalCount > 500 && (Date.now() - searchStartMs < 7500)) {
+                        const maxPages = Math.min(6, Math.ceil(p1.totalCount / 500));
                         for (let startP = 2; startP <= maxPages; startP += 5) {
+                            if (Date.now() - searchStartMs > 8500) break;
                             const batch = [];
                             for (let p = startP; p < startP + 5 && p <= maxPages; p++) {
                                 const u = `${BLD_HUB_API_URL}?sigunguCd=${sg}&bjdongCd=${bj}&numOfRows=500&pageNo=${p}&serviceKey=${BLD_HUB_SERVICE_KEY}`;
@@ -14911,48 +15449,96 @@
             if (!cleanQ) return [];
 
             const hasSeoulPrefix = /^서울/.test(cleanQ);
-            const postUrls = hasSeoulPrefix
-                ? [
-                    `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(cleanQ)}&v=3.0`,
-                    `https://api.poesis.co.kr/post/search.php?q=${encodeURIComponent(cleanQ)}&v=3.0`
-                  ]
-                : [
-                    `https://api.poesis.kr/post/search.php?q=${encodeURIComponent('서울 ' + cleanQ)}&v=3.0`,
-                    `https://api.poesis.co.kr/post/search.php?q=${encodeURIComponent('서울 ' + cleanQ)}&v=3.0`,
-                    `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(cleanQ)}&v=3.0`
-                  ];
+            const spacedRoadVariant = cleanQ.replace(/([가-힣]+(?:대로|로))(\d+길)/g, '$1 $2');
+            const rawQueries = [
+                hasSeoulPrefix ? cleanQ : ('서울 ' + cleanQ),
+                cleanQ
+            ];
+            if (spacedRoadVariant !== cleanQ) {
+                rawQueries.push(hasSeoulPrefix ? spacedRoadVariant : ('서울 ' + spacedRoadVariant));
+                rawQueries.push(spacedRoadVariant);
+            }
+            const queryList = Array.from(new Set(rawQueries));
+
+            const fetchPostRowsJsonp = (qStr, ms = 4200) => new Promise((resolve, reject) => {
+                const cbName = '__pcJsonpCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+                const script = document.createElement('script');
+                let settled = false;
+                const cleanup = () => {
+                    try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                };
+                const timer = setTimeout(() => {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    reject(new Error('JSONP timeout'));
+                }, ms);
+                window[cbName] = (j) => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    cleanup();
+                    if (Array.isArray(j?.results) && j.results.length > 0) {
+                        const sRows = j.results.filter(r => JSON.stringify(r).includes('서울'));
+                        if (sRows.length > 0) return resolve(sRows);
+                    }
+                    reject(new Error('No Seoul JSONP results'));
+                };
+                script.onerror = () => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    cleanup();
+                    reject(new Error('JSONP script error'));
+                };
+                script.src = `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(qStr)}&v=3.0&callback=${cbName}`;
+                document.head.appendChild(script);
+            });
+
+            const fetchPostRows = async (targetUrl, ms) => {
+                const ctrl = new AbortController();
+                const tId = setTimeout(() => ctrl.abort(), ms);
+                try {
+                    const res = await fetch(targetUrl, { signal: ctrl.signal });
+                    clearTimeout(tId);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const j = await res.json();
+                    if (!Array.isArray(j?.results)) throw new Error('Invalid JSON');
+                    const sRows = j.results.filter(r => JSON.stringify(r).includes('서울'));
+                    if (sRows.length === 0) throw new Error('No Seoul results');
+                    return sRows;
+                } catch (e) {
+                    clearTimeout(tId);
+                    throw e;
+                }
+            };
 
             let rows = [];
-            for (const pUrl of postUrls) {
-                const tryUrls = [
-                    pUrl,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(pUrl)}`,
-                    `https://corsproxy.io/?${encodeURIComponent(pUrl)}`
-                ];
-                for (const u of tryUrls) {
-                    try {
-                        const ctrl = new AbortController();
-                        const tId = setTimeout(() => ctrl.abort(), 5000);
-                        const res = await fetch(u, { signal: ctrl.signal });
-                        clearTimeout(tId);
-                        if (res.ok) {
-                            const j = await res.json();
-                            if (Array.isArray(j?.results) && j.results.length > 0) {
-                                const sRows = j.results.filter(r => JSON.stringify(r).includes('서울'));
-                                if (sRows.length > 0) {
-                                    rows = sRows;
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (e) {}
-                }
-                if (rows.length > 0) break;
+            for (const qItem of queryList) {
+                const directUrl = `https://api.poesis.kr/post/search.php?q=${encodeURIComponent(qItem)}&v=3.0`;
+                // 1) 직접 fetch + CORS 우회 JSONP 병렬 경쟁 (최대 4.2초)
+                try {
+                    rows = await Promise.any([
+                        fetchPostRows(directUrl, 4000),
+                        fetchPostRowsJsonp(qItem, 4200)
+                    ]);
+                    if (rows.length > 0) break;
+                } catch (e) {}
+                // 2) 직접/JSONP 모두 실패 시 프록시 병렬 경쟁 (최대 3.5초)
+                try {
+                    const proxyUrls = [
+                        `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`,
+                        `https://corsproxy.io/?${encodeURIComponent(directUrl)}`
+                    ];
+                    rows = await Promise.any(proxyUrls.map(u => fetchPostRows(u, 3500)));
+                    if (rows.length > 0) break;
+                } catch (e) {}
             }
 
             if (rows.length === 0) return [];
 
-            const dongBunJiRegex = /([가-힣]+(?:\d+가)?동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
+            const dongBunJiRegex = /([가-힣]+(?:\d+가)?\d*동|[가-힣]+\d+가|세종로|충무로\d+가|을지로\d+가|남대문로\d+가|태평로\d+가|원효로\d+가|한강로\d+가|동소문동\d+가|삼선동\d+가|동선동\d+가|안암동\d+가|보문동\d+가|영등포동\d+가|당산동\d+가|문래동\d+가|양평동\d+가)\s+(산\s+)?(\d{1,4})(?:-(\d{1,4}))?(?!\d)(?!\s*(?:동|호|층|가|로|길)\b)/g;
             const inputRoad = extractRoadAddressParts(query);
             const candidates = [];
             const seen = new Set();
@@ -15022,22 +15608,51 @@
         }
 
         async function fetchBuildingsForLot(cand, originalQuery) {
-            const urls = [
+            const exactUrls = [
                 `${BLD_HUB_API_URL}?sigunguCd=${cand.sigunguCd}&bjdongCd=${cand.bjdongCd}&platGbCd=${cand.platGbCd}&bun=${cand.bun}&ji=${cand.ji}&numOfRows=500&pageNo=1&serviceKey=${BLD_HUB_SERVICE_KEY}`,
                 `${BLD_HUB_API_URL}?sigunguCd=${cand.sigunguCd}&bjdongCd=${cand.bjdongCd}&bun=${cand.bun}&ji=${cand.ji}&numOfRows=500&pageNo=1&serviceKey=${BLD_HUB_SERVICE_KEY}`
             ];
-            const items = await fetchOpenApiItemsWithFallback(urls, 6500);
+            let items = await fetchOpenApiItemsWithFallback(exactUrls, 3500);
+
+            // 합필·관련지번 등으로 부번(ji)이 다른 표제부에 등재된 경우(예: 천호대로 455 등) 본번(bun) 전체 조회 후 도로명 일치 필터
+            if (!items || items.length === 0) {
+                const bunOnlyUrls = [
+                    `${BLD_HUB_API_URL}?sigunguCd=${cand.sigunguCd}&bjdongCd=${cand.bjdongCd}&bun=${cand.bun}&numOfRows=500&pageNo=1&serviceKey=${BLD_HUB_SERVICE_KEY}`
+                ];
+                const bunItems = await fetchOpenApiItemsWithFallback(bunOnlyUrls, 3500);
+                if (bunItems && bunItems.length > 0) {
+                    const targetRoad = extractRoadAddressParts(cand.roadAddr || originalQuery);
+                    const roadMatched = targetRoad.roadName
+                        ? bunItems.filter(it => {
+                            const r = extractRoadAddressParts(it.newPlatPlc || '');
+                            if (r.roadName !== targetRoad.roadName) return false;
+                            if (targetRoad.roadBon && r.roadBon !== targetRoad.roadBon) return false;
+                            if (targetRoad.roadBu && r.roadBu !== targetRoad.roadBu) return false;
+                            return true;
+                        })
+                        : [];
+                    if (roadMatched.length > 0) {
+                        items = roadMatched;
+                    } else {
+                        const mainLotItems = bunItems.filter(it => String(it.ji || '').replace(/^0+/, '') === '');
+                        items = mainLotItems.length > 0 ? mainLotItems : bunItems;
+                    }
+                }
+            }
 
             const seen = new Set();
             const unique = [];
-            for (const rawIt of items) {
+            for (const rawIt of (items || [])) {
+                const effBun = String(rawIt.bun || cand.bun || '').padStart(4, '0');
+                const effJi = String(rawIt.ji || cand.ji || '0').padStart(4, '0');
+                const effPlatGb = rawIt.platGbCd || cand.platGbCd || '0';
                 const it = {
                     ...rawIt,
                     sigunguCd: rawIt.sigunguCd || cand.sigunguCd,
                     bjdongCd: rawIt.bjdongCd || cand.bjdongCd,
-                    platGbCd: rawIt.platGbCd || cand.platGbCd,
-                    bun: rawIt.bun || cand.bun,
-                    ji: rawIt.ji || cand.ji
+                    platGbCd: effPlatGb,
+                    bun: effBun,
+                    ji: effJi
                 };
                 const sig = `${it.bldNm||''}|${it.dongNm||''}|${it.newPlatPlc||''}|${it.platPlc||''}|${it.grndFlrCnt||''}|${it.totArea||''}`;
                 if (!seen.has(sig)) {
@@ -15045,11 +15660,11 @@
                     unique.push({
                         kind: 'building',
                         item: it,
-                        sigunguCd: cand.sigunguCd,
-                        bjdongCd: cand.bjdongCd,
-                        platGbCd: cand.platGbCd,
-                        bun: cand.bun,
-                        ji: cand.ji,
+                        sigunguCd: it.sigunguCd,
+                        bjdongCd: it.bjdongCd,
+                        platGbCd: effPlatGb,
+                        bun: effBun,
+                        ji: effJi,
                         combinedContext: `${originalQuery} ${cand.roadAddr} ${cand.jibunAddr}`,
                         bldNameHint: cand.bldNm || '',
                         roadFullKeyword: cand.roadAddr || originalQuery
@@ -15067,6 +15682,7 @@
             if (m.kind === 'building') {
                 renderBuildingDetailInFacility(m, siblingMatches, userSelectedDong);
             } else if (m.kind === 'subway' || m.isSubway) {
+                currentFacilitySelectedBld = null;
                 if (resultEl) resultEl.style.display = 'none';
                 if (bldResultEl) bldResultEl.style.display = 'none';
                 if (subwayResultEl) subwayResultEl.style.display = 'flex';
@@ -15079,11 +15695,14 @@
             }
         }
 
+        let activeFacilitySearchReqId = 0;
+
         async function searchFacility(query) {
             const q = (query || "").trim();
             if (!q) return;
 
             ensureSubwayDatabaseInitialized();
+            const myReqId = ++activeFacilitySearchReqId;
 
             const loadingEl = document.getElementById('facilityLoadingIndicator');
             const resultEl = document.getElementById('facilityResultContainer');
@@ -15095,6 +15714,10 @@
             const multiMatchCount = document.getElementById('facilityMultiMatchCount');
 
             loadingEl.style.display = 'block';
+            try {
+            currentTabFacilityState.query = q;
+            currentTabFacilityState.hasSearched = true;
+            currentTabFacilityState.noResult = false;
             noResultEl.style.display = 'none';
             if (resultEl) resultEl.style.display = 'none';
             if (subwayResultEl) subwayResultEl.style.display = 'none';
@@ -15106,8 +15729,8 @@
 
             const combinedMatches = [];
 
-            // 1. 도로 시설물 검색 (주소 검색이 아닐 때 우선)
-            if (!isAddressLike) {
+            // 1. 도로 시설물 및 지하철역 검색 (시설물 정보 모드이며 주소 검색이 아닐 때 우선)
+            if (facilityModalMode !== 'building' && !isAddressLike) {
                 const isHanRiverBroadSearch = (qClean === "한강" || qClean === "대교" || qClean === "한강교량" || qClean === "한강대교" || qClean === "한강다리");
                 let facExact = [];
                 let facPartial = [];
@@ -15138,7 +15761,7 @@
             }
 
             // 3. 도로명/지번 주소 오픈API 기반 건축물대장 & 층별현황 & 스프링클러 조회
-            if (isAddressLike || combinedMatches.length === 0) {
+            if (facilityModalMode === 'building' || isAddressLike || combinedMatches.length === 0) {
                 const addrCandidates = await searchAddressCandidatesFromPostcodify(q);
                 const exactCandidates = addrCandidates.filter(c => c.exactMatch);
 
@@ -15171,13 +15794,22 @@
                             if (bldResultEl) bldResultEl.style.display = 'none';
                             noResultEl.style.display = 'none';
                             loadingEl.style.display = 'block';
+            currentTabFacilityState.query = q;
+            currentTabFacilityState.hasSearched = true;
+            currentTabFacilityState.noResult = false;
                             const lotMatches = await fetchBuildingsForLot(cand, q);
                             loadingEl.style.display = 'none';
                             if (lotMatches.length === 0) {
                                 noResultEl.style.display = 'flex';
                                 return;
                             }
-                            displayUnifiedFacilityMatch(lotMatches[0], lotMatches, false);
+                            currentTabFacilityState.noResult = false;
+                        currentTabFacilityState.matches = lotMatches;
+                        currentTabFacilityState.activeMatchIndex = 0;
+                        currentTabFacilityState.selectedItem = lotMatches[0];
+                        currentTabFacilityState.userSelectedDong = false;
+                        saveAppState();
+                        displayUnifiedFacilityMatch(lotMatches[0], lotMatches, false);
                         });
                         multiMatchList.appendChild(card);
                     });
@@ -15201,6 +15833,12 @@
             const allAreBuildings = combinedMatches.every(m => m.kind === 'building');
             if (allAreBuildings) {
                 const sortedBlds = sortBuildingMatchesByDong(combinedMatches);
+                currentTabFacilityState.noResult = false;
+                currentTabFacilityState.matches = sortedBlds;
+                currentTabFacilityState.activeMatchIndex = 0;
+                currentTabFacilityState.selectedItem = sortedBlds[0];
+                currentTabFacilityState.userSelectedDong = false;
+                saveAppState();
                 displayUnifiedFacilityMatch(sortedBlds[0], sortedBlds, false);
                 return;
             }
@@ -15238,8 +15876,29 @@
                 multiMatchContainer.style.display = 'flex';
             }
 
+            currentTabFacilityState.noResult = false;
+            currentTabFacilityState.matches = combinedMatches;
+            currentTabFacilityState.activeMatchIndex = 0;
+            currentTabFacilityState.selectedItem = combinedMatches[0];
+            currentTabFacilityState.userSelectedDong = false;
+            if (myReqId !== activeFacilitySearchReqId) return;
+            saveAppState();
             displayUnifiedFacilityMatch(combinedMatches[0]);
+            } catch (err) {
+                console.error('searchFacility error:', err);
+                if (myReqId === activeFacilitySearchReqId && noResultEl) {
+                    noResultEl.style.display = 'flex';
+                }
+            } finally {
+                if (myReqId === activeFacilitySearchReqId && loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+            }
         }
+
+
+
+        
 
         if (facilitySearchForm) {
             facilitySearchForm.addEventListener('submit', (e) => {
@@ -16017,10 +16676,10 @@
 
             function sortRoomTarget(a, b) {
                 function parseTargetScore(name) {
-                    if (name.includes('비고')) return -30000;
-                    if (name.includes('대피')) return -20000;
-                    if (name.includes('옥상')) return 999999;
-                    const bMatch = name.match(/B(\d+)(?:(\d{2})호)?/);
+                    if (name.includes('비고')) return -999999;
+                    if (name.includes('대피')) return -999998;
+                    if (name.includes('옥상')) return 9999999;
+                    const bMatch = name.match(/B(\d+)(?:(\d{2})호|층)?/i);
                     if (bMatch) {
                         const floor = parseInt(bMatch[1], 10);
                         const room = bMatch[2] ? parseInt(bMatch[2], 10) : 0;
@@ -16030,11 +16689,16 @@
                     if (fMatch) return parseInt(fMatch[1], 10) * 1000;
                     const rMatch = name.match(/(\d+)호/);
                     if (rMatch) {
-                        const n = parseInt(rMatch[1], 10);
-                        return n >= 100 ? Math.floor(n / 100) * 1000 + (n % 100) : n;
+                        const num = parseInt(rMatch[1], 10);
+                        if (num >= 100) {
+                            const floor = Math.floor(num / 100);
+                            const room = num % 100;
+                            return floor * 1000 + room;
+                        }
+                        return num;
                     }
                     const numMatch = name.match(/\d+/);
-                    return numMatch ? parseInt(numMatch[0], 10) : 50000;
+                    return numMatch ? parseInt(numMatch[0], 10) : 5000000;
                 }
                 return parseTargetScore(a.name) - parseTargetScore(b.name);
             }
@@ -17214,6 +17878,10 @@
                 currentFacilitySelectedBld = null;
                 bldHighlightedFloorsMap.clear();
                 currentRenderedBldKey = '';
+                lastRenderedBldQuery = '';
+                currentTabFacilityState = { query: '', hasSearched: false, noResult: false, activeMatchIndex: 0, matches: [], selectedItem: null, userSelectedDong: false };
+                const aptHallBadgeEl = document.getElementById('bldLedgerAptHallBadge');
+                if (aptHallBadgeEl) { aptHallBadgeEl.style.display = 'none'; aptHallBadgeEl.textContent = ''; }
                 ['facilityLoadingIndicator', 'facilityResultContainer', 'facilitySubwayResultContainer', 'facilityBuildingResultContainer', 'facilityMultiMatchContainer', 'facilityNoResultBox'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'none';
