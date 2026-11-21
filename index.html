@@ -2071,6 +2071,244 @@
             margin-bottom: 8px;
         }
 
+
+        /* === 건축물/소방시설 검색 전용 스타일 (툴킷 이식) === */
+        .addr-cand-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 12px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .addr-cand-card:hover {
+            border-color: #2563eb;
+            background: #f8fafc;
+        }
+        .addr-cand-card.is-active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+        .addr-cand-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .addr-cand-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .addr-cand-lbl {
+            flex-shrink: 0;
+            width: 44px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748b;
+        }
+        .addr-cand-val {
+            color: #0f172a;
+            font-weight: 700;
+            word-break: keep-all;
+        }
+        .addr-cand-action {
+            flex-shrink: 0;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: #475569;
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .addr-cand-card.is-active .addr-cand-action {
+            background: #2563eb;
+        }
+        
+        .bld-ledger-top-table, .bld-ledger-grid-table, .bld-ledger-flr-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #1e293b;
+        }
+        .bld-ledger-top-table th, .bld-ledger-flr-table th {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-weight: 800;
+            padding: 8px 6px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .bld-ledger-top-table td, .bld-ledger-flr-table td {
+            padding: 8px 8px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+            font-weight: 600;
+            background: #ffffff;
+        }
+        .bld-ledger-top-table tbody tr {
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .bld-ledger-top-table tbody tr:hover td {
+            background: #f1f5f9;
+        }
+        .bld-ledger-top-table tbody tr.is-selected td {
+            background: #dbeafe;
+            color: #1e3a8a;
+            font-weight: 800;
+        }
+        .bld-ledger-grid-table th {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-weight: 800;
+            padding: 8px 6px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+            width: 13%;
+            white-space: nowrap;
+        }
+        .bld-ledger-grid-table td {
+            background: #ffffff;
+            color: #0f172a;
+            font-weight: 600;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+            width: 20%;
+            word-break: keep-all;
+        }
+        .bld-ledger-flr-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .bld-ledger-flr-table tbody tr {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td {
+            background: #fee2e2 !important;
+            color: #991b1b;
+            font-weight: 800;
+            border-top: 2px solid #dc2626 !important;
+            border-bottom: 2px solid #dc2626 !important;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td:first-child {
+            border-left: 2px solid #dc2626 !important;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td:last-child {
+            border-right: 2px solid #dc2626 !important;
+        }
+        .bld-fire-fac-btn {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #2563eb;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e3a8a;
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .bld-fire-fac-btn:hover {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+        .bld-fire-fac-btn.is-open {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            color: #ffffff;
+            border-color: #1e40af;
+        }
+        .bld-fire-fac-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px 14px;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+        }
+        .bld-fire-fac-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .bld-fire-fac-group-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: #0f172a;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            align-self: flex-start;
+        }
+        .bld-fire-fac-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .bld-fire-fac-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 7px 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .bld-fire-fac-badge {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 7px;
+            border-radius: 5px;
+            background: #16a34a;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1.3;
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+            margin-top: 1px;
+        }
+        .bld-fire-fac-name {
+            flex-shrink: 0;
+            min-width: 108px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #1d4ed8;
+        }
+        .bld-fire-fac-reason {
+            flex: 1;
+            font-size: 12px;
+            color: #334155;
+            font-weight: 600;
+            word-break: keep-all;
+        }
+
     
 
         /* 툴킷 전용 홈 런처 레이아웃 오버라이드 (원래 버튼 크기로 복원) */
@@ -2378,6 +2616,23 @@
             top: 0;
             z-index: 2;
         }
+        .bld-ledger-flr-table tbody tr {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td {
+            background: #fee2e2 !important;
+            color: #991b1b;
+            font-weight: 800;
+            border-top: 2px solid #dc2626 !important;
+            border-bottom: 2px solid #dc2626 !important;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td:first-child {
+            border-left: 2px solid #dc2626 !important;
+        }
+        .bld-ledger-flr-table tbody tr.is-flr-highlighted td:last-child {
+            border-right: 2px solid #dc2626 !important;
+        }
         .bld-fire-fac-btn {
             width: 100%;
             padding: 10px 14px;
@@ -2453,7 +2708,7 @@
             border-radius: 5px;
             background: #16a34a;
             color: #ffffff;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 900;
             line-height: 1.3;
             white-space: nowrap;
@@ -2463,11 +2718,13 @@
         .bld-fire-fac-name {
             flex-shrink: 0;
             min-width: 108px;
+            font-size: 12px;
             font-weight: 900;
             color: #1d4ed8;
         }
         .bld-fire-fac-reason {
             flex: 1;
+            font-size: 12px;
             color: #334155;
             font-weight: 600;
             word-break: keep-all;
@@ -2644,7 +2901,7 @@
                 <!-- 상단 헤더 바 -->
                 <div style="background: #0f172a; color: #ffffff; padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; flex-shrink: 0;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">🌉</span>
+                        <span id="facilityModalHeaderIcon" style="font-size: 18px;">🌉</span>
                         <span style="font-size: 16px; font-weight: 900; letter-spacing: -0.02em;">건축물 / 시설물(터널, 대교 등) 정보</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 7px;">
@@ -2661,7 +2918,7 @@
                         <!-- 타이틀 & 검색창 -->
                         <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 13px;">
                             <div style="width: 54px; height: 54px; border-radius: 16px; background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 15px -3px rgba(13, 148, 136, 0.35);">
-                                <span style="font-size: 26px; line-height: 1;">🌉</span>
+                                <span id="facilityModalHeroIcon" style="font-size: 26px; line-height: 1;">🌉</span>
                             </div>
                             <h1 style="font-size: clamp(20px, 4.3vw, 26px); font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0;">건축물 / 시설물 제원 및 현황정보 검색</h1>
                             <div style="font-size: 13.5px; font-weight: 700; color: #475569; letter-spacing: -0.02em; margin-top: -4px;">(건축물·스프링클러 / 터널, 대교, 지하차도, 지하철역 등)</div>
@@ -2700,7 +2957,7 @@
                         <div id="facilityNoResultBox" class="facility-glass-card" style="display: none; padding: 28px 20px; text-align: center; flex-direction: column; gap: 8px;">
                             <i class="fa-solid fa-circle-exclamation" style="color: #f59e0b; font-size: 26px;"></i>
                             <p style="font-size: 16px; font-weight: 800; color: #0f172a;">검색 결과가 없습니다.</p>
-                            <p style="font-size: 12.5px; color: #64748b; line-height: 1.5; font-weight: 600;">예: 가양대교, 구기터널, 양재지하차도, 서울역, 강남역 또는 도로명/지번 주소(마포구 월드컵로 207, 강남구 압구정동 458 등)를 입력해 보세요.</p>
+                            <p id="facilityNoResultHint" style="font-size: 12.5px; color: #64748b; line-height: 1.5; font-weight: 600;">예: 가양대교, 구기터널, 마포대교, 남산1호터널, 양재지하차도, 서울역, 강남역 등을 입력해 보세요.</p>
                         </div>
 
                         <!-- 시설물 검색 결과 컨테이너 (4대 핵심 섹션 - 캡처 대상 영역) -->
@@ -2836,7 +3093,7 @@
                                 </div>
                             </div>
                         </div>
-                    
+
                         <!-- 건축물대장 및 스프링클러 검색 결과 컨테이너 -->
                         <div id="facilityBuildingResultContainer" style="display: none; flex-direction: column; gap: 14px; background: #ffffff; padding: 14px; border-radius: 14px; border: 1px solid #cbd5e1;">
                             <!-- 0. 스프링클러 설치 현황 배너 -->
@@ -2987,17 +3244,18 @@
                                 </div>
                             </div>
                         </div>
-    
+
                     </div>
 
-                    <footer style="padding-top: 12px; text-align: center; font-size: 11.5px; color: #64748b; font-weight: 600;">
+                    <footer id="facilityModalFooterText" style="padding-top: 12px; text-align: center; font-size: 11.5px; color: #64748b; font-weight: 600;">
                         건설CALS 시설물 오픈API · 서울교통공사 역사정보 · 국토교통부 건축물대장 &amp; 소방청 스프링클러 정보 연동
                     </footer>
                 </div>
 
-                <!-- 하단 닫기 버튼 바 -->
-                <div style="background: #ffffff; padding: 10px 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; flex-shrink: 0;">
-                    <button id="facilityCloseBtn" type="button" style="background: #0d9488; color: #ffffff; border: none; border-radius: 7px; padding: 7px 18px; font-size: 13px; font-weight: 800; cursor: pointer;">닫기</button>
+                <!-- 하단 버튼 바 -->
+                <div style="background: #ffffff; padding: 10px 16px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0;">
+                    
+                    <button id="facilityCloseBtn" type="button" style="flex-shrink: 0; margin-left: auto; background: #0d9488; color: #ffffff; border: none; border-radius: 7px; padding: 8px 18px; font-size: 13px; font-weight: 800; cursor: pointer;">닫기</button>
                 </div>
             </div>
         </div>
@@ -14947,6 +15205,15 @@
                 panel.style.display = isOpen ? 'none' : 'flex';
                 bldFireFacilitiesToggleBtn.classList.toggle('is-open', !isOpen);
                 if (chevron) chevron.textContent = isOpen ? '▼ 펼치기' : '▲ 접기';
+            });
+        }
+        const bldLedgerFloorBodyEl = document.getElementById('bldLedgerFloorBody');
+        if (bldLedgerFloorBodyEl) {
+            bldLedgerFloorBodyEl.addEventListener('click', (e) => {
+                const tr = e.target.closest('tr');
+                if (!tr || !bldLedgerFloorBodyEl.contains(tr)) return;
+                if (tr.querySelector('td[colspan]')) return;
+                tr.classList.toggle('is-flr-highlighted');
             });
         }
         if (facilityModalOpenBtn) facilityModalOpenBtn.addEventListener('click', () => openModal(facilityModal));
