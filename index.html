@@ -2135,6 +2135,42 @@
         .addr-cand-card.is-active .addr-cand-action {
             background: #2563eb;
         }
+        .addr-cand-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+            padding: 6px 4px 2px;
+        }
+        .addr-page-btn {
+            min-width: 30px;
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 7px;
+            border: 1.5px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            font-size: 12.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+        }
+        .addr-page-btn:hover {
+            border-color: #2563eb;
+            color: #1d4ed8;
+            background: #eff6ff;
+        }
+        .addr-page-btn.is-active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+        }
         
         .bld-ledger-top-table, .bld-ledger-grid-table, .bld-ledger-flr-table {
             width: 100%;
@@ -2923,14 +2959,14 @@
                             <h1 style="font-size: clamp(20px, 4.3vw, 26px); font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0;">건축물 / 시설물 제원 및 현황정보 검색</h1>
                             <div style="font-size: 13.5px; font-weight: 700; color: #475569; letter-spacing: -0.02em; margin-top: -4px;">(건축물·스프링클러 / 터널, 대교, 지하차도, 지하철역 등)</div>
 
-                            <form id="facilitySearchForm" style="position: relative; width: 100%; max-width: 560px; margin: 0 auto;">
+                            <form id="facilitySearchForm" style="position: relative; width: 100%; max-width: 560px; margin: 0 auto;" autocomplete="off">
                                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 17px; pointer-events: none;"></i>
                                 <input
                                     type="text"
                                     id="facilitySearchInput"
                                     class="facility-search-input"
                                     placeholder="건축물 주소(도로명·지번) 또는 시설물(터널·대교·지하철역) 입력"
-                                >
+                                 autocomplete="off">
                                 <button type="submit" class="facility-search-btn">
                                     <span>검색</span>
                                 </button>
@@ -3289,14 +3325,14 @@
                             </div>
                             <h1 style="font-size: clamp(21px, 4.5vw, 27px); font-weight: 900; color: #0f172a; letter-spacing: -0.03em;">위험물 핵심 대응요령 검색</h1>
 
-                            <form id="hazmatSearchForm" style="position: relative; width: 100%; max-width: 560px; margin: 0 auto;">
+                            <form id="hazmatSearchForm" style="position: relative; width: 100%; max-width: 560px; margin: 0 auto;" autocomplete="off">
                                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 17px; pointer-events: none;"></i>
                                 <input
                                     type="text"
                                     id="hazmatSearchInput"
                                     class="hazmat-search-input"
                                     placeholder="물질명 또는 CAS 번호를 입력하세요 (예: 메탄올, 아세톤, 벤젠, 황산, 67-56-1)"
-                                >
+                                 autocomplete="off">
                                 <button type="submit" class="hazmat-search-btn">
                                     <span>검색</span>
                                 </button>
@@ -3393,7 +3429,7 @@
                             <label for="input-floor-ratio" style="font-size: 13.5px; font-weight: 800; color: #f1f5f9; white-space: nowrap;">
                                 층수 <span style="color: #93c5fd; font-size: 12px; font-weight: 600;">(지상/지하)</span>:
                             </label>
-                            <input type="text" id="input-floor-ratio" value="5/0" placeholder="5/0" style="width: 70px; height: 28px; border: 1.5px solid #cbd5e1; border-radius: 5px; text-align: center; font-size: 13.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);">
+                            <input type="text" id="input-floor-ratio" value="5/0" placeholder="5/0" style="width: 70px; height: 28px; border: 1.5px solid #cbd5e1; border-radius: 5px; text-align: center; font-size: 13.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);" autocomplete="off">
                         </div>
                         <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; background: #1e293b; border: 1px solid #475569; padding: 4px 9px; border-radius: 5px;">
                             <input type="checkbox" id="syncAllRoomsCheck" style="width: 14px; height: 14px; cursor: pointer; accent-color: #e25858;">
@@ -3410,17 +3446,17 @@
                         <div id="partialInputsContainer" style="display: none; align-items: center; gap: 4px; flex-wrap: nowrap; flex-shrink: 0;">
                             <div style="display: flex; align-items: center; gap: 2px; font-size: 11.5px; color: #f1f5f9; font-weight: 700; white-space: nowrap;">
                                 <span style="color: #94a3b8; font-size: 11px;">층수:</span>
-                                <input type="text" id="partialFloorStart" placeholder="B1" style="width: 44px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 2px;">
+                                <input type="text" id="partialFloorStart" placeholder="B1" style="width: 44px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 2px;" autocomplete="off">
                                 <span>층~</span>
-                                <input type="text" id="partialFloorEnd" placeholder="25" style="width: 44px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 2px;">
+                                <input type="text" id="partialFloorEnd" placeholder="25" style="width: 44px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 2px;" autocomplete="off">
                                 <span>층</span>
                             </div>
                             <span style="color: #64748b; font-size: 11px;">|</span>
                             <div style="display: flex; align-items: center; gap: 2px; font-size: 11.5px; color: #f1f5f9; font-weight: 700; white-space: nowrap;">
                                 <span style="color: #94a3b8; font-size: 11px;">호실:</span>
-                                <input type="text" id="partialRoomStart" placeholder="1" style="width: 28px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 1px;">
+                                <input type="text" id="partialRoomStart" placeholder="1" style="width: 28px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 1px;" autocomplete="off">
                                 <span>호~</span>
-                                <input type="text" id="partialRoomEnd" placeholder="4" style="width: 28px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 1px;">
+                                <input type="text" id="partialRoomEnd" placeholder="4" style="width: 28px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11.5px; font-weight: 800; color: #0f172a; background: #ffffff; outline: none; padding: 0 1px;" autocomplete="off">
                                 <span>호</span>
                             </div>
                         </div>
@@ -4182,7 +4218,8 @@
         `;
 
         const STORAGE_KEY = 'disaster_standalone_toolkit_v2';
-        let openModalId = null;
+        const modalHistoryStack = [];
+        let ignorePopStateCount = 0;
 
         let toastTimeout = null;
         function showToast(msg) {
@@ -4200,23 +4237,72 @@
         }
 
         function openModal(m) {
-            if (m) {
-                m.classList.remove('hidden');
-                if (['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal'].includes(m.id)) {
-                    openModalId = m.id;
-                    saveAppState();
+            if (!m) return;
+            const alreadyOpen = !m.classList.contains('hidden');
+            m.classList.remove('hidden');
+            if (!alreadyOpen) {
+                const idx = modalHistoryStack.indexOf(m.id);
+                if (idx !== -1) modalHistoryStack.splice(idx, 1);
+                modalHistoryStack.push(m.id);
+                try {
+                    history.pushState({ toolkitModal: m.id, depth: modalHistoryStack.length }, '', window.location.href);
+                } catch (e) {}
+            }
+        }
+
+        function closeModal(m, fromPopState = false) {
+            if (!m) return;
+            const wasOpen = !m.classList.contains('hidden');
+            m.classList.add('hidden');
+            const idx = modalHistoryStack.lastIndexOf(m.id);
+            if (idx !== -1) modalHistoryStack.splice(idx, 1);
+            if (wasOpen && !fromPopState) {
+                try {
+                    if (history.state && history.state.toolkitModal === m.id) {
+                        ignorePopStateCount++;
+                        history.back();
+                    }
+                } catch (e) {
+                    ignorePopStateCount = Math.max(0, ignorePopStateCount - 1);
                 }
             }
         }
-        function closeModal(m) {
-            if (m) {
-                m.classList.add('hidden');
-                if (openModalId === m.id) {
-                    openModalId = null;
-                    saveAppState();
+
+        function closeAllModalsSilently() {
+            const prevDepth = modalHistoryStack.length;
+            modalHistoryStack.length = 0;
+            ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal', 'resetModal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            if (prevDepth > 0) {
+                try {
+                    if (history.state && history.state.toolkitModal) {
+                        ignorePopStateCount++;
+                        history.go(-prevDepth);
+                    }
+                } catch (e) {
+                    ignorePopStateCount = Math.max(0, ignorePopStateCount - 1);
                 }
             }
         }
+
+        // 모바일(갤럭시 등) 뒤로가기 버튼 클릭 시 브라우저 종료 대신 최상단 열려있는 창 닫기
+        window.addEventListener('popstate', () => {
+            if (ignorePopStateCount > 0) {
+                ignorePopStateCount--;
+                return;
+            }
+            if (modalHistoryStack.length > 0) {
+                const topId = modalHistoryStack[modalHistoryStack.length - 1];
+                const topEl = document.getElementById(topId);
+                if (topEl && !topEl.classList.contains('hidden')) {
+                    closeModal(topEl, true);
+                } else {
+                    modalHistoryStack.pop();
+                }
+            }
+        });
 
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -5209,13 +5295,13 @@
                     </div>
                     <span style="font-size: 10.5px; color: #334155; font-weight: 800;">국가위험물정보시스템 연동</span>
                 </div>
-                <form class="hazmat-search-form">
+                <form class="hazmat-search-form" autocomplete="off">
                     <span style="position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 13.5px; pointer-events: none;">🔍</span>
                     <input
                         type="text"
                         class="hazmat-search-input"
                         placeholder="물질명 또는 CAS 번호 입력 (예: 메탄올, 아세톤, 벤젠, 황산, 나트륨, 67-56-1)"
-                    >
+                     autocomplete="off">
                     <button type="submit" class="hazmat-search-btn">검색</button>
                 </form>
                 <div class="hazmat-loading" style="display: none; text-align: center; padding: 10px 0; font-size: 12px; color: #475569; font-weight: 700;">
@@ -5620,7 +5706,7 @@
                     </div>
                     <span style="font-size: 10.5px; color: #334155; font-weight: 800;">서울교통공사 1~8호선 연동</span>
                 </div>
-                <form class="hazmat-search-form subway-search-form">
+                <form class="hazmat-search-form subway-search-form" autocomplete="off">
                     <span style="position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 13.5px; pointer-events: none;">🔍</span>
                     <input
                         type="text"
@@ -15198,6 +15284,18 @@
                         });
                         if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
                             currentFacilitySelectedBld.floorUsageMap = builtUsageMap;
+                            if (currentFacilitySelectedBld.appliedTabId === activeTabId && Object.keys(builtUsageMap).length > 0) {
+                                floorState.bldFloorUsageMap = JSON.parse(JSON.stringify(builtUsageMap));
+                                if (floorState.syncAllRooms) {
+                                    applyBuildingFloorUsageToFloors(floorState.bldFloorUsageMap, false);
+                                    if (floorState.partialSetting && floorState.partialSetting.enabled) {
+                                        applyPartialSettingUpdate();
+                                    }
+                                    renderTable();
+                                    calculateStatsAndSummary();
+                                    saveAppState();
+                                }
+                            }
                         }
                     }
                 }
@@ -15774,45 +15872,74 @@
                 } else if (addrCandidates.length > 1 && multiMatchContainer && multiMatchList && multiMatchCount) {
                     loadingEl.style.display = 'none';
                     multiMatchCount.textContent = addrCandidates.length;
-                    multiMatchList.innerHTML = '';
                     multiMatchList.style.flexDirection = 'column';
-                    addrCandidates.forEach((cand) => {
-                        const card = document.createElement('button');
-                        card.type = 'button';
-                        card.className = 'addr-cand-card';
-                        card.innerHTML = `
-                            <div class="addr-cand-info">
-                                <div class="addr-cand-row"><span class="addr-cand-lbl">건물명</span><span class="addr-cand-val">${cand.bldNm || '-'}</span></div>
-                                <div class="addr-cand-row"><span class="addr-cand-lbl">지번</span><span class="addr-cand-val" style="font-weight:600; color:#334155;">${cand.jibunAddr}</span></div>
-                                <div class="addr-cand-row"><span class="addr-cand-lbl">도로명</span><span class="addr-cand-val" style="color:#1e40af;">${cand.roadAddr}${cand.exactMatch ? ' <span style="font-size:10px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; margin-left:4px;">일치</span>' : ''}</span></div>
-                            </div>
-                            <span class="addr-cand-action">상세조회</span>
-                        `;
-                        card.addEventListener('click', async () => {
-                            multiMatchList.querySelectorAll('.addr-cand-card').forEach(c => c.classList.remove('is-active'));
-                            card.classList.add('is-active');
-                            if (bldResultEl) bldResultEl.style.display = 'none';
-                            noResultEl.style.display = 'none';
-                            loadingEl.style.display = 'block';
-            currentTabFacilityState.query = q;
-            currentTabFacilityState.hasSearched = true;
-            currentTabFacilityState.noResult = false;
-                            const lotMatches = await fetchBuildingsForLot(cand, q);
-                            loadingEl.style.display = 'none';
-                            if (lotMatches.length === 0) {
-                                noResultEl.style.display = 'flex';
-                                return;
-                            }
-                            currentTabFacilityState.noResult = false;
-                        currentTabFacilityState.matches = lotMatches;
-                        currentTabFacilityState.activeMatchIndex = 0;
-                        currentTabFacilityState.selectedItem = lotMatches[0];
-                        currentTabFacilityState.userSelectedDong = false;
-                        saveAppState();
-                        displayUnifiedFacilityMatch(lotMatches[0], lotMatches, false);
+
+                    const PAGE_SIZE = 10;
+                    const totalPages = Math.ceil(addrCandidates.length / PAGE_SIZE);
+                    let currentPage = 1;
+
+                    const renderAddrCandPage = (pageNum) => {
+                        currentPage = Math.max(1, Math.min(totalPages, pageNum));
+                        multiMatchList.innerHTML = '';
+                        const startIdx = (currentPage - 1) * PAGE_SIZE;
+                        const pageItems = addrCandidates.slice(startIdx, startIdx + PAGE_SIZE);
+
+                        pageItems.forEach((cand) => {
+                            const card = document.createElement('button');
+                            card.type = 'button';
+                            card.className = 'addr-cand-card';
+                            card.innerHTML = `
+                                <div class="addr-cand-info">
+                                    <div class="addr-cand-row"><span class="addr-cand-lbl">건물명</span><span class="addr-cand-val">${cand.bldNm || '-'}</span></div>
+                                    <div class="addr-cand-row"><span class="addr-cand-lbl">지번</span><span class="addr-cand-val" style="font-weight:600; color:#334155;">${cand.jibunAddr}</span></div>
+                                    <div class="addr-cand-row"><span class="addr-cand-lbl">도로명</span><span class="addr-cand-val" style="color:#1e40af;">${cand.roadAddr}${cand.exactMatch ? ' <span style="font-size:10px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; margin-left:4px;">일치</span>' : ''}</span></div>
+                                </div>
+                                <span class="addr-cand-action">상세조회</span>
+                            `;
+                            card.addEventListener('click', async () => {
+                                multiMatchContainer.style.display = 'none';
+                                if (bldResultEl) bldResultEl.style.display = 'none';
+                                noResultEl.style.display = 'none';
+                                loadingEl.style.display = 'block';
+                                currentTabFacilityState.query = q;
+                                currentTabFacilityState.hasSearched = true;
+                                currentTabFacilityState.noResult = false;
+                                const lotMatches = await fetchBuildingsForLot(cand, q);
+                                loadingEl.style.display = 'none';
+                                if (lotMatches.length === 0) {
+                                    noResultEl.style.display = 'flex';
+                                    return;
+                                }
+                                currentTabFacilityState.noResult = false;
+                                currentTabFacilityState.matches = lotMatches;
+                                currentTabFacilityState.activeMatchIndex = 0;
+                                currentTabFacilityState.selectedItem = lotMatches[0];
+                                currentTabFacilityState.userSelectedDong = false;
+                                saveAppState();
+                                displayUnifiedFacilityMatch(lotMatches[0], lotMatches, false);
+                            });
+                            multiMatchList.appendChild(card);
                         });
-                        multiMatchList.appendChild(card);
-                    });
+
+                        if (totalPages > 1) {
+                            const pagWrap = document.createElement('div');
+                            pagWrap.className = 'addr-cand-pagination';
+                            for (let p = 1; p <= totalPages; p++) {
+                                const pBtn = document.createElement('button');
+                                pBtn.type = 'button';
+                                pBtn.className = `addr-page-btn ${p === currentPage ? 'is-active' : ''}`;
+                                pBtn.textContent = String(p);
+                                pBtn.addEventListener('click', () => {
+                                    renderAddrCandPage(p);
+                                    multiMatchContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                });
+                                pagWrap.appendChild(pBtn);
+                            }
+                            multiMatchList.appendChild(pagWrap);
+                        }
+                    };
+
+                    renderAddrCandPage(1);
                     multiMatchContainer.style.display = 'flex';
                     return;
                 }
@@ -15962,19 +16089,33 @@
                 if (usageMap && Object.keys(usageMap).length > 0) {
                     floorState.syncAllRooms = true;
                     if (syncAllRoomsCheck) syncAllRoomsCheck.checked = true;
+                    applyBuildingFloorUsageToFloors(usageMap, true);
                     if (floorState.partialSetting && floorState.partialSetting.enabled) {
                         applyPartialSettingUpdate();
                     }
-                    applyBuildingFloorUsageToFloors(usageMap, true);
                 } else {
                     floorState.syncAllRooms = false;
                     if (syncAllRoomsCheck) syncAllRoomsCheck.checked = false;
                     floorState.bldFloorUsageMap = null;
                 }
 
-                closeModal(facilityModal);
                 updateFloorBannerTitle();
-                openModal(floorStatusModal);
+                const isFloorAlreadyOpen = floorStatusModal && !floorStatusModal.classList.contains('hidden');
+                if (isFloorAlreadyOpen) {
+                    closeModal(facilityModal);
+                } else {
+                    if (facilityModal) facilityModal.classList.add('hidden');
+                    const fIdx = modalHistoryStack.lastIndexOf('facilityModal');
+                    if (fIdx !== -1) {
+                        modalHistoryStack[fIdx] = 'floorStatusModal';
+                        if (floorStatusModal) floorStatusModal.classList.remove('hidden');
+                        try {
+                            history.replaceState({ toolkitModal: 'floorStatusModal', depth: modalHistoryStack.length }, '', window.location.href);
+                        } catch (e) {}
+                    } else {
+                        openModal(floorStatusModal);
+                    }
+                }
                 renderTable();
                 calculateStatsAndSummary();
                 saveAppState();
@@ -16785,23 +16926,12 @@
             if (!fl) return;
             if (!fl.rooms) fl.rooms = [];
 
-            // 건축물 조회 용도가 들어있는 층에서 + 버튼을 누르면 용도를 제거하고 101호(또는 지하 B101호)부터 시작
-            if (fl.rooms.length === 1 && fl.rooms[0].isBldUsage) {
-                const isPartialRoomActiveForUsage = floorState.partialSetting?.enabled && (floorState.partialSetting.roomStart || floorState.partialSetting.roomEnd);
-                let startNum = 1;
-                if (isPartialRoomActiveForUsage) {
-                    const rStart = parseRoomNum(floorState.partialSetting.roomStart, 0);
-                    const rEnd = parseRoomNum(floorState.partialSetting.roomEnd, 0);
-                    startNum = (floorState.partialSetting.roomStart && floorState.partialSetting.roomEnd)
-                        ? Math.min(rStart, rEnd)
-                        : (floorState.partialSetting.roomStart ? rStart : 1);
-                    if (!startNum || startNum < 1) startNum = 1;
-                }
-                const formatted = startNum < 10 ? '0' + startNum : String(startNum);
-                fl.rooms[0].name = fl.floor > 0 ? `${fl.floor}${formatted}` : `B${Math.abs(fl.floor)}${formatted}`;
-                fl.rooms[0].isBldUsage = false;
+            if (floorState.syncAllRooms) {
                 fl.manualRoomsOverride = true;
-                return;
+            }
+            if (fl.rooms.length === 1 && fl.rooms[0].isBldUsage) {
+                fl.rooms[0].name = '';
+                fl.rooms[0].isBldUsage = false;
             }
 
             const isPartialRoomActive = floorState.partialSetting?.enabled && (floorState.partialSetting.roomStart || floorState.partialSetting.roomEnd);
@@ -16874,17 +17004,7 @@
             if (!fl.rooms) fl.rooms = [];
 
             const restoreUsageOrBlank = (baseRoom) => {
-                const usageMap = floorState.syncAllRooms ? getAvailableBldFloorUsageMap() : null;
-                if (floorState.syncAllRooms && usageMap) {
-                    delete fl.manualRoomsOverride;
-                    return {
-                        id: (baseRoom && baseRoom.id) || `bld-usage-${fl.floor}-${Date.now()}`,
-                        name: usageMap[String(fl.floor)] || '',
-                        text: baseRoom ? (baseRoom.text || '') : '',
-                        isFire: baseRoom ? !!baseRoom.isFire : false,
-                        isBldUsage: true
-                    };
-                }
+                delete fl.manualRoomsOverride;
                 return {
                     id: (baseRoom && baseRoom.id) || `empty-${fl.floor}-${Date.now()}`,
                     name: '',
@@ -16893,11 +17013,6 @@
                     isBldUsage: false
                 };
             };
-
-            // 이미 건축물 조회 용도 표시 상태이고 체크박스가 켜져 있으면 용도를 지우지 않고 유지
-            if (fl.rooms.length === 1 && fl.rooms[0].isBldUsage && floorState.syncAllRooms) {
-                return;
-            }
 
             const isPartialRoomActive = floorState.partialSetting?.enabled && (floorState.partialSetting.roomStart || floorState.partialSetting.roomEnd);
             if (isPartialRoomActive) {
@@ -16950,7 +17065,7 @@
             saveCurrentTabData();
         }
 
-        function createRoomCell(fl, rm, isLast, widthPx, textClass, isTopHeader = false) {
+        function createRoomCell(fl, rm, isLast, widthPx, textClass, isTopHeader = false, hideHeader = false) {
             const cell = document.createElement('div');
             cell.className = 'room-cell';
             const borderRight = isLast ? '' : 'border-right: 1.5px solid #0f172a;';
@@ -16973,7 +17088,7 @@
                     <div style="flex: 1; min-height: 38px; display: flex; align-items: stretch; justify-content: stretch; background: ${cellBg}; box-sizing: border-box;">
                         <div class="smart-input-container">
                             <div class="smart-overlay">${renderTokensToHtml(rm.text)}</div>
-                            <textarea class="smart-textarea" spellcheck="false">${rm.text || ''}</textarea>
+                            <textarea class="smart-textarea" spellcheck="false" autocomplete="off">${rm.text || ''}</textarea>
                         </div>
                     </div>
                 `;
@@ -16982,8 +17097,8 @@
 
                 const bg = rm.isFire ? '#dc2626' : '#e2e8f0';
                 const color = rm.isFire ? '#ffffff' : '#0f172a';
-                const headerHtml = `
-                    <div class="room-hdr" style="width: ${typeof widthPx === 'string' ? widthPx : (widthPx + 'px')}; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: ${textClass}; font-weight: 900; background: ${bg}; color: ${color}; border-right: 1.5px solid #0f172a; cursor: pointer; user-select: none; padding: ${rm.isBldUsage ? '3px 5px' : '2px 1px'}; text-align: center; line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; letter-spacing: -0.03em; box-sizing: border-box;">
+                const headerHtml = hideHeader ? '' : `
+                    <div class="room-hdr" style="width: ${typeof widthPx === 'string' ? widthPx : (widthPx + 'px')}; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: ${textClass}; font-weight: 900; background: ${bg}; color: ${color}; border-right: 1.5px solid #0f172a; cursor: pointer; user-select: none; padding: 2px 1px; text-align: center; line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; letter-spacing: -0.03em; box-sizing: border-box;">
                         <span>${rm.name || ''}</span>
                         ${rm.isFire ? FIRE_ICON_SVG : ''}
                     </div>
@@ -16995,7 +17110,7 @@
                     <div style="flex: 1; min-width: 0; min-height: 38px; display: flex; align-items: stretch; justify-content: stretch; background: ${cellBg}; box-sizing: border-box;">
                         <div class="smart-input-container">
                             <div class="smart-overlay">${renderTokensToHtml(rm.text)}</div>
-                            <textarea class="smart-textarea" spellcheck="false">${rm.text || ''}</textarea>
+                            <textarea class="smart-textarea" spellcheck="false" autocomplete="off">${rm.text || ''}</textarea>
                         </div>
                     </div>
                 `;
@@ -17019,7 +17134,7 @@
             return cell;
         }
 
-        function renderFloorRow(container, fl, hasBottomBorder, maxTierCols = 1, isGroundDivider = false, roomsToRender = null, uniformUsageWidthPx = null) {
+        function renderFloorRow(container, fl, hasBottomBorder, maxTierCols = 1, isGroundDivider = false, roomsToRender = null, bldUsageMap = null) {
             const row = document.createElement('div');
             let bottomBorderStyle = '';
             if (isGroundDivider) {
@@ -17050,6 +17165,28 @@
 
             left.querySelector('.btn-add').addEventListener('click', () => handleAddRoom(fl.floor));
             left.querySelector('.btn-del').addEventListener('click', () => handleRemoveRoom(fl.floor));
+
+            // 건축물 조회 내용 불러오기 활성화 시: 층수 바로 옆에 독립된 용도 회색칸(기존 1/3의 절반 = 1/6 너비) 배치
+            // + 버튼으로 101, 102 호실을 늘려도 이 회색칸은 그대로 유지됨
+            const showUsageCol = !!(floorState.syncAllRooms && bldUsageMap);
+            if (showUsageCol) {
+                const usageText = bldUsageMap[String(fl.floor)] || '';
+                const blankFireTarget = (roomCount === 0 || isSingleBlank)
+                    ? (rooms[0] || (fl.rooms && fl.rooms[0]) || null)
+                    : null;
+                const isUsageFire = !!(blankFireTarget && blankFireTarget.isFire);
+                const usageCol = document.createElement('div');
+                usageCol.className = 'floor-usage-col';
+                usageCol.style.cssText = `width: calc((100% - 40px) / 6); flex: 0 0 calc((100% - 40px) / 6); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 900; background: ${isUsageFire ? '#dc2626' : '#e2e8f0'}; color: ${isUsageFire ? '#ffffff' : '#0f172a'}; border-right: 1.5px solid #0f172a; padding: 3px 4px; text-align: center; line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; letter-spacing: -0.03em; user-select: none; box-sizing: border-box; ${blankFireTarget ? 'cursor: pointer;' : ''}`;
+                usageCol.innerHTML = `
+                    <span>${usageText}</span>
+                    ${isUsageFire ? FIRE_ICON_SVG : ''}
+                `;
+                if (blankFireTarget) {
+                    usageCol.addEventListener('click', () => toggleFire(blankFireTarget));
+                }
+                row.appendChild(usageCol);
+            }
 
             const rightCol = document.createElement('div');
             rightCol.style.cssText = 'flex: 1 1 0%; width: 0; min-width: 0; display: flex; flex-direction: column; height: auto; min-height: 38px; box-sizing: border-box;';
@@ -17089,11 +17226,8 @@
                 }
                 const tierRow = document.createElement('div');
                 tierRow.className = 'tier-row room-scale-1';
-                tierRow.style.cssText = 'display: grid; grid-template-columns: 1fr; width: 100%; min-width: 0; min-height: 38px; height: auto; align-items: stretch; box-sizing: border-box;';
-                const useUniform = !!(uniformUsageWidthPx && blankRm.isBldUsage);
-                const effectiveWPx = useUniform ? uniformUsageWidthPx : targetWPx;
-                const effectiveTSize = useUniform ? '11.5px' : targetTSize;
-                tierRow.appendChild(createRoomCell(fl, blankRm, true, effectiveWPx, effectiveTSize, false));
+                tierRow.style.cssText = 'flex: 1 0 auto; display: grid; grid-template-columns: 1fr; width: 100%; min-width: 0; min-height: 38px; align-items: stretch; box-sizing: border-box;';
+                tierRow.appendChild(createRoomCell(fl, blankRm, true, targetWPx, targetTSize, false, showUsageCol));
                 rightCol.appendChild(tierRow);
             } else {
                 const CHUNK_SIZE = 5;
@@ -17109,7 +17243,7 @@
 
                     const tierRow = document.createElement('div');
                     tierRow.className = `tier-row ${isTopHeader ? 'room-scale-top-header' : sClass}`;
-                    tierRow.style.cssText = `display: grid; grid-template-columns: repeat(${baseCols}, minmax(0, 1fr)); width: 100%; min-width: 0; min-height: ${isTopHeader ? '59px' : '38px'}; height: auto; align-items: stretch; box-sizing: border-box; ${isLastTier ? '' : 'border-bottom: 2px solid #0f172a;'}`;
+                    tierRow.style.cssText = `flex: 1 0 auto; display: grid; grid-template-columns: repeat(${baseCols}, minmax(0, 1fr)); width: 100%; min-width: 0; min-height: ${isTopHeader ? '59px' : '38px'}; align-items: stretch; box-sizing: border-box; ${isLastTier ? '' : 'border-bottom: 2px solid #0f172a;'}`;
 
                     const fillers = Math.max(0, baseCols - tierRooms.length);
 
@@ -17121,7 +17255,7 @@
                     if (fillers > 0) {
                         const f = document.createElement('div');
                         f.className = 'room-cell-filler';
-                        f.style.cssText = `grid-column: span ${fillers}; width: 100%; min-width: 0; min-height: ${isTopHeader ? '59px' : '38px'}; height: auto; background: #f8fafc; box-sizing: border-box;`;
+                        f.style.cssText = `grid-column: span ${fillers}; width: 100%; min-width: 0; min-height: ${isTopHeader ? '59px' : '38px'}; height: 100%; background: #f8fafc; box-sizing: border-box;`;
                         tierRow.appendChild(f);
                     }
 
@@ -17153,7 +17287,7 @@
                         <div style="flex: 1; min-width: 0; display: flex; align-items: stretch; justify-content: center; background: #ffffff; box-sizing: border-box;">
                             <div class="smart-input-container room-scale-1">
                                 <div class="smart-overlay">${renderTokensToHtml(floorState.selfEvac ? floorState.selfEvac.text : '')}</div>
-                                <textarea class="smart-textarea textarea-self-evac" placeholder="비고 내용 직접 입력 (예: 자력대피 10명, 자택대기 2명 등)" spellcheck="false">${floorState.selfEvac ? floorState.selfEvac.text : ''}</textarea>
+                                <textarea class="smart-textarea textarea-self-evac" placeholder="비고 내용 직접 입력 (예: 자력대피 10명, 자택대기 2명 등)" spellcheck="false" autocomplete="off">${floorState.selfEvac ? floorState.selfEvac.text : ''}</textarea>
                             </div>
                         </div>
                     ` : `<div style="flex: 1; background: #f8fafc;"></div>`}
@@ -17203,7 +17337,7 @@
                             <div style="flex: 1; background: ${floorState.rooftop.isFire ? '#fef2f2' : '#ffffff'}; display: flex; align-items: stretch; justify-content: center; box-sizing: border-box;">
                                 <div class="smart-input-container room-scale-1">
                                     <div class="smart-overlay">${renderTokensToHtml(floorState.rooftop.text)}</div>
-                                    <textarea class="smart-textarea" spellcheck="false">${floorState.rooftop.text}</textarea>
+                                    <textarea class="smart-textarea" spellcheck="false" autocomplete="off">${floorState.rooftop.text}</textarea>
                                 </div>
                             </div>
                         ` : `<div style="flex: 1; background: #f8fafc;"></div>`}
@@ -17234,9 +17368,7 @@
             let maxTierCols = 1;
             const visibleFloors = floorState.floors.filter(fl => isFloorInRange(fl.floor));
 
-            // 건축물 조회 용도 불러오기 활성화 시 전층 회색칸 너비를 3호실 분할 시 1개 칸과 정확히 동일한 1/3(calc(100% / 3))로 통일
-            const hasAnyBldUsage = visibleFloors.some(fl => fl.rooms && fl.rooms.some(r => r.isBldUsage));
-            const uniformUsageWidthPx = (floorState.syncAllRooms || hasAnyBldUsage) ? 'calc(100% / 3)' : null;
+            const activeUsageMap = floorState.syncAllRooms ? getAvailableBldFloorUsageMap() : null;
 
             visibleFloors.forEach(fl => {
                 const rooms = fl.rooms ? fl.rooms.filter((rm, rIdx) => rm.isBldUsage ? true : isRoomInRange(rm.name, rIdx)) : [];
@@ -17255,7 +17387,7 @@
                 const nextFloor = visibleFloors[idx + 1];
                 const isGroundDivider = (fl.floor === 1 && nextFloor && nextFloor.floor < 0);
                 const roomsForFloor = fl.rooms ? fl.rooms.filter((rm, rIdx) => rm.isBldUsage ? true : isRoomInRange(rm.name, rIdx)) : [];
-                renderFloorRow(container, fl, !isLastFloor, maxTierCols, isGroundDivider, roomsForFloor, uniformUsageWidthPx);
+                renderFloorRow(container, fl, !isLastFloor, maxTierCols, isGroundDivider, roomsForFloor, activeUsageMap);
             });
         }
 
@@ -17275,17 +17407,17 @@
             const usageMap = explicitMap || getAvailableBldFloorUsageMap();
             if (!usageMap || Object.keys(usageMap).length === 0) return false;
             floorState.bldFloorUsageMap = JSON.parse(JSON.stringify(usageMap));
+            const hasPartialRooms = !!(floorState.partialSetting?.enabled && (floorState.partialSetting.roomStart || floorState.partialSetting.roomEnd));
             floorState.floors.forEach(fl => {
-                if (!forceOverwriteManual && fl.manualRoomsOverride) return;
+                if (!forceOverwriteManual && (fl.manualRoomsOverride || hasPartialRooms)) return;
                 delete fl.manualRoomsOverride;
-                const usageText = usageMap[String(fl.floor)] || '';
                 const prevFirst = (fl.rooms && fl.rooms.length > 0) ? fl.rooms[0] : null;
                 fl.rooms = [{
-                    id: (prevFirst && prevFirst.id) || `bld-usage-${fl.floor}-${Date.now()}-${Math.random()}`,
-                    name: usageText,
+                    id: (prevFirst && prevFirst.id) || `empty-${fl.floor}-${Date.now()}-${Math.random()}`,
+                    name: '',
                     text: prevFirst ? (prevFirst.text || '') : '',
                     isFire: prevFirst ? !!prevFirst.isFire : false,
-                    isBldUsage: true
+                    isBldUsage: false
                 }];
             });
             return true;
@@ -17300,8 +17432,8 @@
             if (partialFloorEnd) partialFloorEnd.value = floorState.partialSetting?.floorEnd || '';
             if (partialRoomStart) partialRoomStart.value = floorState.partialSetting?.roomStart || '';
             if (partialRoomEnd) partialRoomEnd.value = floorState.partialSetting?.roomEnd || '';
-            applyPartialSettingUpdate();
             if (floorState.syncAllRooms) applyBuildingFloorUsageToFloors();
+            applyPartialSettingUpdate();
             updateFloorBannerTitle();
             openModal(floorStatusModal);
             renderTable();
@@ -17314,8 +17446,8 @@
             if (!floorState.partialSetting) floorState.partialSetting = {};
             floorState.partialSetting.enabled = e.target.checked;
             if (partialInputsContainer) partialInputsContainer.style.display = e.target.checked ? 'flex' : 'none';
-            applyPartialSettingUpdate();
             if (floorState.syncAllRooms) applyBuildingFloorUsageToFloors();
+            applyPartialSettingUpdate();
             updateFloorBannerTitle();
             renderTable();
             calculateStatsAndSummary();
@@ -17340,8 +17472,8 @@
                     if (partialSettingCheck) partialSettingCheck.checked = true;
                 }
                 if (floorState.partialSetting.enabled) {
-                    applyPartialSettingUpdate();
                     if (floorState.syncAllRooms) applyBuildingFloorUsageToFloors();
+                    applyPartialSettingUpdate();
                     updateFloorBannerTitle();
                     renderTable();
                     calculateStatsAndSummary();
@@ -17384,10 +17516,10 @@
                         syncFloorsFromRatio();
                     }
                 }
+                applyBuildingFloorUsageToFloors(usageMap, true);
                 if (floorState.partialSetting && floorState.partialSetting.enabled) {
                     applyPartialSettingUpdate();
                 }
-                applyBuildingFloorUsageToFloors(usageMap, true);
                 renderTable();
                 calculateStatsAndSummary();
                 showToast('건축물 조회 층별 용도를 불러왔습니다.');
@@ -17652,18 +17784,18 @@
 
                 tr.innerHTML = `
                     <td class="td-cas-no">${rowNo}</td>
-                    <td><input type="text" class="cas-tbl-input cas-in-name" value="${row.name || ''}" placeholder="이름"></td>
-                    <td><input type="text" class="cas-tbl-input cas-in-gender" value="${row.genderAge || ''}" placeholder="남성/30대"></td>
-                    <td><input type="text" class="cas-tbl-input cas-in-loc" value="${row.location || ''}" placeholder="발견장소"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-name" value="${row.name || ''}" placeholder="이름" autocomplete="off"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-gender" value="${row.genderAge || ''}" placeholder="남성/30대" autocomplete="off"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-loc" value="${row.location || ''}" placeholder="발견장소" autocomplete="off"></td>
                     <td class="cas-cell-toggle ${isCrit ? 'is-checked-critical' : ''}" data-sev="critical" title="긴급 선택">${isCrit ? '✓' : ''}</td>
                     <td class="cas-cell-toggle ${isUrg ? 'is-checked-urgent' : ''}" data-sev="urgent" title="응급 선택">${isUrg ? '✓' : ''}</td>
                     <td class="cas-cell-toggle ${isNonUrg ? 'is-checked-nonurgent' : ''}" data-sev="nonUrgent" title="비응급 선택">${isNonUrg ? '✓' : ''}</td>
                     <td class="cas-cell-toggle ${isDead ? 'is-checked-dead' : ''}" data-sev="dead" title="사망 선택">${isDead ? '✓' : ''}</td>
-                    <td><input type="text" class="cas-tbl-input cas-in-symptom" value="${row.symptom || ''}" placeholder="주증상"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-symptom" value="${row.symptom || ''}" placeholder="주증상" autocomplete="off"></td>
                     <td class="cas-cell-toggle ${isTrans ? 'is-checked-trans' : ''}" data-trans="transported" title="이송 선택">${isTrans ? '✓' : ''}</td>
                     <td class="cas-cell-toggle ${isNotTrans ? 'is-checked-not-trans' : ''}" data-trans="notTransported" title="미이송 선택">${isNotTrans ? '✓' : ''}</td>
-                    <td><input type="text" class="cas-tbl-input cas-in-hosp" value="${row.hospital || ''}" placeholder="병원명"></td>
-                    <td><input type="text" class="cas-tbl-input cas-in-remarks" value="${row.remarks || ''}" placeholder="비고"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-hosp" value="${row.hospital || ''}" placeholder="병원명" autocomplete="off"></td>
+                    <td><input type="text" class="cas-tbl-input cas-in-remarks" value="${row.remarks || ''}" placeholder="비고" autocomplete="off"></td>
                     <td class="cas-no-print"><button type="button" class="cas-del-row-btn" title="해당 행 삭제">&times;</button></td>
                 `;
 
@@ -17922,11 +18054,7 @@
             calculateCasualtyStats();
 
             // 열려있는 모든 모달 닫기 및 저장된 로컬스토리지 제거 (초기화면 복귀)
-            openModalId = null;
-            ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal', 'resetModal'].forEach(id => {
-                const m = document.getElementById(id);
-                if (m) m.classList.add('hidden');
-            });
+            closeAllModalsSilently();
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
         }
 
@@ -17937,20 +18065,126 @@
             });
         }
 
-        // 새로 접속·새로고침·재접속 시 항상 전체 초기화된 초기화면으로 시작하도록 영구 저장 비활성화
+        // 작업 기록은 전체 초기화 전까지 localStorage에 유지하되, 열려있던 모달 상태는 저장하지 않음
         function saveAppState() {
-            // 의도적으로 저장하지 않음
+            try {
+                const hlObj = {};
+                if (typeof bldHighlightedFloorsMap !== 'undefined' && bldHighlightedFloorsMap instanceof Map) {
+                    bldHighlightedFloorsMap.forEach((setVal, k) => {
+                        if (setVal && setVal.size > 0) hlObj[k] = Array.from(setVal);
+                    });
+                }
+                const payload = {
+                    updatedAt: Date.now(),
+                    floorState,
+                    casualtyState,
+                    checkedItems: Array.from(checkedItemsStore),
+                    selectedCategory: selectedCategoryItem ? { type: selectedCategoryItem.type, no: selectedCategoryItem.cat.no } : null,
+                    facilityState: {
+                        tabState: currentTabFacilityState,
+                        selectedBld: currentFacilitySelectedBld || null,
+                        lotBuildingMatches: Array.isArray(currentLotBuildingMatches) ? currentLotBuildingMatches : [],
+                        highlightedFloors: hlObj,
+                        currentRenderedBldKey: currentRenderedBldKey || '',
+                        lastRenderedBldQuery: lastRenderedBldQuery || ''
+                    },
+                    hazmatQuery: hazmatSearchInput ? hazmatSearchInput.value : ''
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        function loadAppState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed.floorState) {
+                    Object.assign(floorState, parsed.floorState);
+                    if (inputFloorRatio) inputFloorRatio.value = floorState.floorRatioStr || '5/0';
+                    if (syncAllRoomsCheck) syncAllRoomsCheck.checked = !!floorState.syncAllRooms;
+                    const isPartial = !!floorState.partialSetting?.enabled;
+                    if (partialSettingCheck) partialSettingCheck.checked = isPartial;
+                    if (partialInputsContainer) partialInputsContainer.style.display = isPartial ? 'flex' : 'none';
+                    if (partialFloorStart) partialFloorStart.value = floorState.partialSetting?.floorStart || '';
+                    if (partialFloorEnd) partialFloorEnd.value = floorState.partialSetting?.floorEnd || '';
+                    if (partialRoomStart) partialRoomStart.value = floorState.partialSetting?.roomStart || '';
+                    if (partialRoomEnd) partialRoomEnd.value = floorState.partialSetting?.roomEnd || '';
+                }
+                if (parsed.casualtyState && Array.isArray(parsed.casualtyState.rows)) {
+                    casualtyState = parsed.casualtyState;
+                }
+                if (Array.isArray(parsed.checkedItems)) {
+                    checkedItemsStore.clear();
+                    parsed.checkedItems.forEach(k => checkedItemsStore.add(k));
+                }
+                if (parsed.selectedCategory) {
+                    const list = CHECKLIST_DATA[parsed.selectedCategory.type];
+                    if (list) {
+                        const found = list.find(c => c.no === parsed.selectedCategory.no);
+                        if (found) selectedCategoryItem = { type: parsed.selectedCategory.type, cat: found };
+                    }
+                }
+                if (parsed.facilityState) {
+                    const fs = parsed.facilityState;
+                    if (fs.tabState) currentTabFacilityState = fs.tabState;
+                    if (fs.selectedBld) currentFacilitySelectedBld = fs.selectedBld;
+                    if (Array.isArray(fs.lotBuildingMatches)) currentLotBuildingMatches = fs.lotBuildingMatches;
+                    if (typeof bldHighlightedFloorsMap !== 'undefined' && bldHighlightedFloorsMap instanceof Map) {
+                        bldHighlightedFloorsMap.clear();
+                        if (fs.highlightedFloors && typeof fs.highlightedFloors === 'object') {
+                            Object.entries(fs.highlightedFloors).forEach(([k, arr]) => {
+                                if (Array.isArray(arr) && arr.length > 0) bldHighlightedFloorsMap.set(k, new Set(arr));
+                            });
+                        }
+                    }
+                    currentRenderedBldKey = fs.currentRenderedBldKey || '';
+                    lastRenderedBldQuery = fs.lastRenderedBldQuery || '';
+                    if (facilitySearchInput && currentTabFacilityState && currentTabFacilityState.query) {
+                        facilitySearchInput.value = currentTabFacilityState.query;
+                    }
+                    if (currentTabFacilityState && currentTabFacilityState.hasSearched && currentTabFacilityState.selectedItem) {
+                        try {
+                            displayUnifiedFacilityMatch(
+                                currentTabFacilityState.selectedItem,
+                                (currentLotBuildingMatches && currentLotBuildingMatches.length > 0) ? currentLotBuildingMatches : (currentTabFacilityState.matches || [currentTabFacilityState.selectedItem]),
+                                !!currentTabFacilityState.userSelectedDong
+                            );
+                        } catch (e) {}
+                    }
+                }
+                if (typeof parsed.hazmatQuery === 'string' && hazmatSearchInput) {
+                    hazmatSearchInput.value = parsed.hazmatQuery;
+                }
+            } catch (e) {}
         }
 
         function startApp() {
             ensureSubwayDatabaseInitialized();
             setupCasualtyEvents();
-            resetAllAppState();
+            loadAppState();
+            updateFloorBannerTitle();
+            renderTable();
+            calculateStatsAndSummary();
+            renderCasualtyTable();
+            calculateCasualtyStats();
+            // 새로 접속·새로고침·재접속 시 항상 맨 처음 초기화면이 보이도록 모든 모달은 닫아둠 (작업 기록은 유지)
+            modalHistoryStack.length = 0;
+            ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal', 'resetModal'].forEach(id => {
+                const m = document.getElementById(id);
+                if (m) m.classList.add('hidden');
+            });
         }
 
-        // 브라우저 뒤로가기/앞으로가기 캐시(bfcache) 복원 시에도 초기화면 유지
+        // 브라우저 bfcache 복원 시에도 초기화면 표시 (작업 기록 유지)
         window.addEventListener('pageshow', (e) => {
-            if (e.persisted) resetAllAppState();
+            if (e.persisted) {
+                modalHistoryStack.length = 0;
+                ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal', 'resetModal'].forEach(id => {
+                    const m = document.getElementById(id);
+                    if (m) m.classList.add('hidden');
+                });
+            }
         });
 
         if (document.readyState === 'loading') {
