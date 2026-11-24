@@ -17859,142 +17859,99 @@
 
         if (resetModalOpenBtn) resetModalOpenBtn.addEventListener('click', () => openModal(resetModal));
         if (resetCancelBtn) resetCancelBtn.addEventListener('click', () => closeModal(resetModal));
+        function resetAllAppState() {
+            // 1) 상황관리 체크리스트 초기화
+            checkedItemsStore.clear();
+            selectedCategoryItem = null;
+            backToChecklistCategories();
+
+            // 2) 소방 특수차 현황 초기화
+            isAllVehiclesExpanded = false;
+            if (toggleAllVehiclesBtn) toggleAllVehiclesBtn.textContent = '전체 펼치기';
+            renderSpecialVehicles();
+            setupSpecialVehicleEvents();
+
+            // 3) 건축물 / 시설물(터널, 대교 등) 정보 초기화
+            if (facilitySearchInput) facilitySearchInput.value = '';
+            currentLotBuildingMatches = [];
+            currentFacilitySelectedBld = null;
+            bldHighlightedFloorsMap.clear();
+            currentRenderedBldKey = '';
+            lastRenderedBldQuery = '';
+            currentTabFacilityState = { query: '', hasSearched: false, noResult: false, activeMatchIndex: 0, matches: [], selectedItem: null, userSelectedDong: false };
+            const aptHallBadgeEl = document.getElementById('bldLedgerAptHallBadge');
+            if (aptHallBadgeEl) { aptHallBadgeEl.style.display = 'none'; aptHallBadgeEl.textContent = ''; }
+            const fireFacPanel = document.getElementById('bldFireFacilitiesDetailPanel');
+            if (fireFacPanel) { fireFacPanel.style.display = 'none'; fireFacPanel.innerHTML = ''; }
+            const fireFacToggleBtn = document.getElementById('bldFireFacilitiesToggleBtn');
+            if (fireFacToggleBtn) fireFacToggleBtn.classList.remove('is-open');
+            const fireFacChevron = document.getElementById('bldFireFacChevron');
+            if (fireFacChevron) fireFacChevron.textContent = '▼ 펼치기';
+            ['facilityLoadingIndicator', 'facilityResultContainer', 'facilitySubwayResultContainer', 'facilityBuildingResultContainer', 'facilityMultiMatchContainer', 'facilityNoResultBox'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            ['facilityMultiMatchList', 'bldLedgerTopListBody', 'bldLedgerFloorBody'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+
+            // 4) 위험물 통합검색 초기화
+            if (hazmatSearchInput) hazmatSearchInput.value = '';
+            ['hazmatLoadingIndicator', 'hazmatResultContainer', 'hazmatNoResultBox'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            // 5) 층별 현황 초기화
+            Object.assign(floorState, getDefaultFloorState());
+            if (inputFloorRatio) inputFloorRatio.value = floorState.floorRatioStr;
+            if (syncAllRoomsCheck) syncAllRoomsCheck.checked = false;
+            if (partialSettingCheck) partialSettingCheck.checked = false;
+            if (partialInputsContainer) partialInputsContainer.style.display = 'none';
+            [partialFloorStart, partialFloorEnd, partialRoomStart, partialRoomEnd].forEach(inp => {
+                if (inp) inp.value = '';
+            });
+            updateFloorBannerTitle();
+            renderTable();
+            calculateStatsAndSummary();
+
+            // 6) 사상자 현황 초기화
+            casualtyState = getDefaultCasualtyState();
+            renderCasualtyTable();
+            calculateCasualtyStats();
+
+            // 열려있는 모든 모달 닫기 및 저장된 로컬스토리지 제거 (초기화면 복귀)
+            openModalId = null;
+            ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal', 'resetModal'].forEach(id => {
+                const m = document.getElementById(id);
+                if (m) m.classList.add('hidden');
+            });
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        }
+
         if (resetConfirmBtn) {
             resetConfirmBtn.addEventListener('click', () => {
-                // 1) 상황관리 체크리스트 초기화
-                checkedItemsStore.clear();
-                selectedCategoryItem = null;
-                backToChecklistCategories();
-
-                // 2) 소방 특수차 현황 초기화
-                isAllVehiclesExpanded = false;
-                if (toggleAllVehiclesBtn) toggleAllVehiclesBtn.textContent = '전체 펼치기';
-                renderSpecialVehicles();
-                setupSpecialVehicleEvents();
-
-                // 3) 건축물 / 시설물(터널, 대교 등) 정보 초기화
-                if (facilitySearchInput) facilitySearchInput.value = '';
-                currentLotBuildingMatches = [];
-                currentFacilitySelectedBld = null;
-                bldHighlightedFloorsMap.clear();
-                currentRenderedBldKey = '';
-                lastRenderedBldQuery = '';
-                currentTabFacilityState = { query: '', hasSearched: false, noResult: false, activeMatchIndex: 0, matches: [], selectedItem: null, userSelectedDong: false };
-                const aptHallBadgeEl = document.getElementById('bldLedgerAptHallBadge');
-                if (aptHallBadgeEl) { aptHallBadgeEl.style.display = 'none'; aptHallBadgeEl.textContent = ''; }
-                ['facilityLoadingIndicator', 'facilityResultContainer', 'facilitySubwayResultContainer', 'facilityBuildingResultContainer', 'facilityMultiMatchContainer', 'facilityNoResultBox'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = 'none';
-                });
-                ['facilityMultiMatchList', 'bldLedgerTopListBody', 'bldLedgerFloorBody', 'bldFireFacilitiesDetailPanel'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.innerHTML = '';
-                });
-
-                // 4) 위험물 통합검색 초기화
-                if (hazmatSearchInput) hazmatSearchInput.value = '';
-                ['hazmatLoadingIndicator', 'hazmatResultContainer', 'hazmatNoResultBox'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = 'none';
-                });
-
-                // 5) 층별 현황 초기화
-                Object.assign(floorState, getDefaultFloorState());
-                if (inputFloorRatio) inputFloorRatio.value = floorState.floorRatioStr;
-                if (syncAllRoomsCheck) syncAllRoomsCheck.checked = false;
-                if (partialSettingCheck) partialSettingCheck.checked = false;
-                if (partialInputsContainer) partialInputsContainer.style.display = 'none';
-                [partialFloorStart, partialFloorEnd, partialRoomStart, partialRoomEnd].forEach(inp => {
-                    if (inp) inp.value = '';
-                });
-                updateFloorBannerTitle();
-                renderTable();
-                calculateStatsAndSummary();
-
-                // 6) 사상자 현황 초기화
-                casualtyState = getDefaultCasualtyState();
-                renderCasualtyTable();
-                calculateCasualtyStats();
-
-                // 열려있는 모달 상태 및 로컬스토리지 초기화
-                openModalId = null;
-                ['checklistModal', 'specialVehicleModal', 'facilityModal', 'hazmatModal', 'floorStatusModal', 'casualtyStatusModal'].forEach(id => {
-                    const m = document.getElementById(id);
-                    if (m) m.classList.add('hidden');
-                });
-                try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-                closeModal(resetModal);
+                resetAllAppState();
                 showToast('모든 메뉴의 조회 및 입력 내용이 초기 상태로 리셋되었습니다.');
             });
         }
 
+        // 새로 접속·새로고침·재접속 시 항상 전체 초기화된 초기화면으로 시작하도록 영구 저장 비활성화
         function saveAppState() {
-            try {
-                const payload = {
-                    updatedAt: Date.now(),
-                    floorState,
-                    casualtyState,
-                    checkedItems: Array.from(checkedItemsStore),
-                    selectedCategory: selectedCategoryItem ? { type: selectedCategoryItem.type, no: selectedCategoryItem.cat.no } : null,
-                    openModalId
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-            } catch (e) {}
-        }
-
-        function loadAppState() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-                if (parsed.floorState) {
-                    Object.assign(floorState, parsed.floorState);
-                }
-                if (parsed.casualtyState && Array.isArray(parsed.casualtyState.rows)) {
-                    casualtyState = parsed.casualtyState;
-                }
-                if (Array.isArray(parsed.checkedItems)) {
-                    checkedItemsStore.clear();
-                    parsed.checkedItems.forEach(k => checkedItemsStore.add(k));
-                }
-                if (parsed.selectedCategory) {
-                    const list = CHECKLIST_DATA[parsed.selectedCategory.type];
-                    if (list) {
-                        const found = list.find(c => c.no === parsed.selectedCategory.no);
-                        if (found) selectedCategoryItem = { type: parsed.selectedCategory.type, cat: found };
-                    }
-                }
-                openModalId = parsed.openModalId || null;
-            } catch (e) {}
+            // 의도적으로 저장하지 않음
         }
 
         function startApp() {
-            loadAppState();
             ensureSubwayDatabaseInitialized();
             setupCasualtyEvents();
-            renderTable();
-            calculateStatsAndSummary();
-            renderCasualtyTable();
-            calculateCasualtyStats();
-
-            if (openModalId === 'checklistModal') {
-                if (selectedCategoryItem) openChecklistDetail(selectedCategoryItem.type, selectedCategoryItem.cat);
-                else backToChecklistCategories();
-                openModal(checklistModal);
-            } else if (openModalId === 'specialVehicleModal') {
-                renderSpecialVehicles();
-                setupSpecialVehicleEvents();
-                openModal(specialVehicleModal);
-            } else if (openModalId === 'facilityModal') {
-                openModal(facilityModal);
-            } else if (openModalId === 'hazmatModal') {
-                openModal(hazmatModal);
-            } else if (openModalId === 'floorStatusModal') {
-                openModal(floorStatusModal);
-            } else if (openModalId === 'casualtyStatusModal') {
-                openCasualtyStatusModal();
-            }
+            resetAllAppState();
         }
+
+        // 브라우저 뒤로가기/앞으로가기 캐시(bfcache) 복원 시에도 초기화면 유지
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) resetAllAppState();
+        });
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', startApp);
