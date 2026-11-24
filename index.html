@@ -2350,9 +2350,9 @@
         /* 모바일 층별현황 용도 칸 글씨 크기 및 깔끔한 줄바꿈 조정 (기존 열 폭 유지) */
         @media (max-width: 520px) {
             .floor-usage-col {
-                font-size: 8px !important;
-                line-height: 1.2 !important;
-                padding: 2px 2px !important;
+                font-size: 7.5px !important;
+                line-height: 1.18 !important;
+                padding: 2px 1px !important;
                 letter-spacing: -0.05em !important;
             }
         }
@@ -17260,11 +17260,14 @@
                 const isUsageFire = !!(blankFireTarget && blankFireTarget.isFire);
                 const usageCol = document.createElement('div');
                 usageCol.className = 'floor-usage-col';
-                const cleanUsageHtml = String(usageText || '')
+                const simplifiedUsageText = String(usageText || '')
+                    .replace(/\((?:[^()]*?(?:다세대주택|다가구주택|연립주택|다중주택|도시형생활주택|아파트|단독주택|공동주택|주택)[^()]*?[-·\s\/(]*)(\d+\s*(?:세대|가구))\)?\)/g, '($1)');
+                const cleanUsageHtml = simplifiedUsageText
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    .replace(/\(/g, '<wbr>(')
+                    .replace(/([^\s,(])\s*\(/g, '$1<br>(')
+                    .replace(/,\s*/g, ',<br>')
                     .replace(/-/g, '-<wbr>');
-                usageCol.style.cssText = `width: calc((100% - 40px) / 6); flex: 0 0 calc((100% - 40px) / 6); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 900; background: ${isUsageFire ? '#dc2626' : '#e2e8f0'}; color: ${isUsageFire ? '#ffffff' : '#0f172a'}; border-right: 1.5px solid #0f172a; padding: 3px 3px; text-align: center; line-height: 1.22; word-break: keep-all; overflow-wrap: break-word; letter-spacing: -0.04em; user-select: none; box-sizing: border-box; ${blankFireTarget ? 'cursor: pointer;' : ''}`;
+                usageCol.style.cssText = `width: calc((100% - 40px) / 6); flex: 0 0 calc((100% - 40px) / 6); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9.5px; font-weight: 900; background: ${isUsageFire ? '#dc2626' : '#e2e8f0'}; color: ${isUsageFire ? '#ffffff' : '#0f172a'}; border-right: 1.5px solid #0f172a; padding: 2px 2px; text-align: center; line-height: 1.2; word-break: keep-all; overflow-wrap: break-word; letter-spacing: -0.04em; user-select: none; box-sizing: border-box; ${blankFireTarget ? 'cursor: pointer;' : ''}`;
                 usageCol.innerHTML = `
                     <span>${cleanUsageHtml}</span>
                     ${isUsageFire ? FIRE_ICON_SVG : ''}
