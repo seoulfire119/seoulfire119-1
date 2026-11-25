@@ -17271,13 +17271,77 @@
                 const isUsageFire = !!(blankFireTarget && blankFireTarget.isFire);
                 const usageCol = document.createElement('div');
                 usageCol.className = 'floor-usage-col';
+                const splitUsageWords = (inner) => {
+                    const normalized = String(inner || '')
+                        .replace(/기계[·\s,\/및]*전기실/g, '기계실,전기실')
+                        .replace(/전기[·\s,\/및]*기계실/g, '전기실,기계실')
+                        .replace(/기계[·\s,\/및]*발전기실/g, '기계실,발전기실')
+                        .replace(/전기[·\s,\/및]*발전기실/g, '전기실,발전기실')
+                        .replace(/[,·\/&+\s]+|(?<=[가-힣])및(?=[가-힣])/g, ',')
+                        .replace(/,+/g, ',');
+                    const dict = [
+                        '기계식주차장', '부설주차장', '옥내주차장', '옥외주차장', '지하주차장', '주차장',
+                        '방공대피소', '지하대피소', '대피공간', '대피소',
+                        '주민공동시설', '근린생활시설', '교육연구시설', '자동차관련시설', '문화및집회시설',
+                        '위험물저장및처리시설', '도시형생활주택', '관리사무소', '물탱크실', '정화조실',
+                        '저수조실', '발전기실', '보일러실', '승강기실', '엘리베이터실', '분리수거장',
+                        '골프연습장', '체력단련장', '노래연습장', '일반음식점', '휴게음식점', '노유자시설',
+                        '판매시설', '업무시설', '의료시설', '운동시설', '숙박시설', '위락시설', '종교시설',
+                        '운수시설', '복리시설', '부대시설', '근생시설', '공동주택', '단독주택', '다세대주택',
+                        '다가구주택', '연립주택', '다중주택', '오피스텔', '기계실', '전기실', '발전실',
+                        '변전실', '펌프실', '공조실', '방재실', '통신실', '경비실', '관리실', '저수조',
+                        '정화조', '경로당', '어린이집', '도서관', '독서실', '소매점', '사무소', '헬스장',
+                        '사우나', '목욕장', '당구장', '편의점', '미용실', '이용원', '세탁소', '부동산',
+                        '고시원', '기숙사', '작업장', '아파트', '창고', '학원', '의원', '약국', '공장'
+                    ];
+                    const dictRe = new RegExp(dict.join('|'), 'g');
+                    const out = [];
+                    normalized.split(',').map(s => s.trim()).filter(Boolean).forEach(chunk => {
+                        if (chunk.length <= 5 || /^\d+\s*(?:세대|가구|호|실)$/.test(chunk)) {
+                            out.push(chunk);
+                            return;
+                        }
+                        let lastIdx = 0;
+                        let m;
+                        const sub = [];
+                        dictRe.lastIndex = 0;
+                        while ((m = dictRe.exec(chunk)) !== null) {
+                            if (m.index > lastIdx) {
+                                const gap = chunk.slice(lastIdx, m.index).trim();
+                                if (gap) sub.push(gap);
+                            }
+                            sub.push(m[0]);
+                            lastIdx = m.index + m[0].length;
+                        }
+                        if (lastIdx < chunk.length) {
+                            const tail = chunk.slice(lastIdx).trim();
+                            if (tail) sub.push(tail);
+                        }
+                        if (sub.length > 0) sub.forEach(t => out.push(t));
+                        else out.push(chunk);
+                    });
+                    return out;
+                };
+                const escUsage = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const simplifiedUsageText = String(usageText || '')
                     .replace(/\((?:[^()]*?(?:다세대주택|다가구주택|연립주택|다중주택|도시형생활주택|아파트|단독주택|공동주택|주택)[^()]*?[-·\s\/(]*)(\d+\s*(?:세대|가구))\)?\)/g, '($1)');
+                const formatUsageSegment = (seg) => {
+                    const m = seg.match(/^([^(]+?)\s*\(([^)]*)\)$/);
+                    if (m) {
+                        const mainTxt = escUsage(m[1].trim());
+                        const words = splitUsageWords(m[2].trim()).map(w => escUsage(w).replace(/-/g, '-<wbr>'));
+                        if (words.length === 0) return mainTxt;
+                        return `${mainTxt}<br>(${words.join('<br>')})`;
+                    }
+                    const words = splitUsageWords(seg.trim()).map(w => escUsage(w).replace(/-/g, '-<wbr>'));
+                    return words.join('<br>');
+                };
                 const cleanUsageHtml = simplifiedUsageText
-                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    .replace(/([^\s,(])\s*\(/g, '$1<br>(')
-                    .replace(/,\s*/g, ',<br>')
-                    .replace(/-/g, '-<wbr>');
+                    .split(/\s*,\s*(?![^()]*\))/)
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map(formatUsageSegment)
+                    .join('<br>');
                 usageCol.style.cssText = `width: calc((100% - 40px) / 6); flex: 0 0 calc((100% - 40px) / 6); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 900; background: ${isUsageFire ? '#dc2626' : '#e2e8f0'}; color: ${isUsageFire ? '#ffffff' : '#0f172a'}; border-right: 1.5px solid #0f172a; padding: 3px 3px; text-align: center; line-height: 1.22; word-break: keep-all; overflow-wrap: anywhere; overflow: hidden; letter-spacing: -0.04em; user-select: none; box-sizing: border-box; ${blankFireTarget ? 'cursor: pointer;' : ''}`;
                 usageCol.innerHTML = `
                     <span>${cleanUsageHtml}</span>
