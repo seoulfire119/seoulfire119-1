@@ -13979,14 +13979,26 @@
                 if (/창고시설|창고|하역장|물류터미널|집배송/.test(s)) return 'warehouse';
                 if (/위락시설|단란주점|유흥주점|무도장|무도학원|카지노/.test(s)) return 'amusement';
                 if (/공장/.test(s)) return 'factory';
+                if (/자동차관련|주차장|주차타워|주차용|차고|세차장|정비공장/.test(s)) return 'auto';
+                if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
+                if (/위험물/.test(s)) return 'hazmat';
+                if (/방송통신/.test(s)) return 'broadcast';
+                if (/발전시설/.test(s)) return 'power';
+                if (/관광휴게/.test(s)) return 'tourism';
+                if (/장례시설|장례식장/.test(s)) return 'funeral';
+                if (/동물 및 식물|동식물|축사/.test(s)) return 'animal';
+                if (/자원순환|분뇨|쓰레기/.test(s)) return 'recycle';
+                if (/교정 및 군사|군사시설/.test(s)) return 'military';
+                if (/묘지관련/.test(s)) return 'cemetery';
                 return '';
             };
 
+            const hasExplicitMainPurps = Boolean(primaryPurpsStr || etcPurpsStr);
             const primaryCat =
                 detectPrimaryCategory(primaryPurpsStr) ||
                 detectPrimaryCategory(etcPurpsStr) ||
                 detectPrimaryCategory(ledgerTypeStr) ||
-                detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`);
+                (hasExplicitMainPurps ? '' : detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`));
 
             // 용도 분류 (스프링클러 설비.pdf 목차 1~30번 기준 — 주용도 단일 매칭)
             const isAptOrDorm = (primaryCat === 'apt');
@@ -14253,9 +14265,13 @@
                 apt: '공동주택', lodging: '숙박시설', comm: '근린생활시설', medical: '의료시설',
                 elderly: '노유자시설', culture: '문화 및 집회시설', religion: '종교시설', sports: '운동시설',
                 sales: '판매시설', transport: '운수시설', edu: '교육연구시설', training: '수련시설',
-                office: '업무시설', warehouse: '창고시설', amusement: '위락시설', factory: '공장'
+                office: '업무시설', warehouse: '창고시설', amusement: '위락시설', factory: '공장',
+                auto: '자동차관련시설', detached: '단독주택', hazmat: '위험물저장 및 처리시설',
+                broadcast: '방송통신시설', power: '발전시설', tourism: '관광휴게시설',
+                funeral: '장례시설', animal: '동물 및 식물관련시설', recycle: '자원순환관련시설',
+                military: '교정 및 군사시설', cemetery: '묘지관련시설'
             };
-            const commonFacLabel = primaryCatLabelMap[primaryCat] || '특정소방대상물';
+            const commonFacLabel = primaryCatLabelMap[primaryCat] || primaryPurpsStr || '특정소방대상물';
             if (ymd >= 20180128 && grndFlr >= 6) {
                 return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${commonFacLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
             }
@@ -14273,8 +14289,8 @@
             }
 
             let unmetRuleDesc = (ymd >= 20180128)
-                ? "특정소방대상물 ('18.1.28) 6층 이상 전층"
-                : (ymd >= 20050101 ? "특정소방대상물 ('05.1.1) 11층 이상 전층" : "특정소방대상물 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층");
+                ? `${commonFacLabel} ('18.1.28) 6층 이상 전층`
+                : (ymd >= 20050101 ? `${commonFacLabel} ('05.1.1) 11층 이상 전층` : `${commonFacLabel} 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층`);
             if (isAptOrDorm) {
                 if (ymd >= 20180128) unmetRuleDesc = "공동주택 ('18.1.28) 6층 이상 전층";
                 else if (ymd >= 20050101) unmetRuleDesc = "공동주택 ('05.1.1) 11층 이상 전층";
@@ -14724,11 +14740,13 @@
             if (trimmed.startsWith('{')) {
                 try {
                     const j = JSON.parse(trimmed);
-                    const body = j?.response?.body || {};
-                    const item = body?.items?.item;
+                    const root = j?.response || j || {};
+                    const body = root?.body || {};
+                    const rawItems = body?.items;
+                    const item = Array.isArray(rawItems) ? rawItems : (rawItems?.item ?? body?.item);
                     const items = !item ? [] : (Array.isArray(item) ? item : [item]);
-                    const totalCount = parseInt(body.totalCount || '0', 10) || items.length;
-                    const numOfRows = parseInt(body.numOfRows || '0', 10) || items.length;
+                    const totalCount = parseInt(body.totalCount ?? root.totalCount ?? j?.totalCount ?? '0', 10) || items.length;
+                    const numOfRows = parseInt(body.numOfRows ?? root.numOfRows ?? j?.numOfRows ?? '0', 10) || items.length;
                     return { items, totalCount, numOfRows };
                 } catch (e) { return { items: [], totalCount: 0, numOfRows: 0 }; }
             }
@@ -14754,6 +14772,181 @@
         const openApiPageCache = new Map();
         const lotFlrFullCache = new Map();
         const postcodifyQueryCache = new Map();
+        const accomFireSysCache = new Map();
+
+        const extractCtpvNmForFireApi = (it, contextStr = '') => {
+            const addr = `${it?.newPlatPlc || ''} ${it?.platPlc || ''} ${contextStr || ''}`.trim();
+            const mapList = [
+                [/서울특별시|서울시|서울/, '서울특별시'],
+                [/부산광역시|부산시|부산/, '부산광역시'],
+                [/대구광역시|대구시|대구/, '대구광역시'],
+                [/인천광역시|인천시|인천/, '인천광역시'],
+                [/광주광역시|광주시|광주/, '광주광역시'],
+                [/대전광역시|대전시|대전/, '대전광역시'],
+                [/울산광역시|울산시|울산/, '울산광역시'],
+                [/세종특별자치시|세종시|세종/, '세종특별자치시'],
+                [/경기도|경기/, '경기도'],
+                [/강원특별자치도|강원도|강원/, '강원특별자치도'],
+                [/충청북도|충북/, '충청북도'],
+                [/충청남도|충남/, '충청남도'],
+                [/전북특별자치도|전라북도|전북/, '전북특별자치도'],
+                [/전라남도|전남/, '전라남도'],
+                [/경상북도|경북/, '경상북도'],
+                [/경상남도|경남/, '경상남도'],
+                [/제주특별자치도|제주도|제주/, '제주특별자치도']
+            ];
+            for (const [rePat, fullNm] of mapList) {
+                if (rePat.test(addr)) return fullNm;
+            }
+            const sggCd = String(it?.sigunguCd || '');
+            if (sggCd.startsWith('11')) return '서울특별시';
+            return '';
+        };
+
+        const matchAccomFireSysItem = (items, it, useAprRaw, effectiveBldName = '', effectiveContext = '') => {
+            if (!Array.isArray(items) || items.length === 0 || !it) return null;
+            const normSpace = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+            const normCompact = (s) => String(s || '').replace(/[\s\-_()\[\]·.,]/g, '').toLowerCase();
+
+            const roadPlc = normSpace(it.newPlatPlc || '');
+            const jibunPlc = normSpace(it.platPlc || '');
+            const combinedAddr = `${roadPlc} ${jibunPlc} ${effectiveContext || ''}`;
+
+            const sggMatch = combinedAddr.match(/([가-힣]+(?:구|군))/);
+            const targetSgg = sggMatch ? sggMatch[1] : '';
+            const dongMatch = jibunPlc.match(/([가-힣0-9]+(?:동|읍|면|가))\b/);
+            const targetDong = dongMatch ? dongMatch[1] : '';
+
+            // 도로명 + 건물번호 추출 (예: 워커힐로 177 또는 테헤란로13길 20-1)
+            const roadNumMatch = roadPlc.match(/([가-힣0-9]+(?:로|길))\s*(\d+(?:-\d+)?)/);
+            const targetRoad = roadNumMatch ? roadNumMatch[1] : '';
+            const targetRoadNo = roadNumMatch ? roadNumMatch[2] : '';
+
+            // 지번 본번[-부번] 추출
+            const bunNum = parseInt(String(it.bun || '').replace(/\D/g, ''), 10) || 0;
+            const jiNum = parseInt(String(it.ji || '').replace(/\D/g, ''), 10) || 0;
+            const targetJibun = bunNum > 0 ? (jiNum > 0 ? `${bunNum}-${jiNum}` : `${bunNum}`) : '';
+
+            const targetNames = [it.bldNm, it.dongNm, effectiveBldName]
+                .map(normCompact)
+                .filter(n => n.length >= 2);
+            const targetYmd = String(useAprRaw || '').replace(/\D/g, '').substring(0, 8);
+
+            let bestItem = null;
+            let bestScore = 0;
+            const exactDongYmdCandidates = [];
+
+            for (const row of items) {
+                const rowSgg = normSpace(row.sggNm || '');
+                const rowDong = normSpace(row.dongNm || '');
+                const rowAddr = normSpace(row.bassAdres || '');
+                const rowAddrCompact = rowAddr.replace(/\s+/g, '');
+                const rowObjCompact = normCompact(row.objNm || '');
+                const rowYmd = String(row.useAprvYmd || '').replace(/\D/g, '').substring(0, 8);
+
+                if (targetSgg && rowSgg && !rowSgg.includes(targetSgg) && !targetSgg.includes(rowSgg)) {
+                    continue;
+                }
+
+                let score = 0;
+                let addrMatched = false;
+
+                // 1) 도로명 + 건물번호 정밀 매칭 (경계 확인으로 17 vs 177 오매칭 차단)
+                if (targetRoad && targetRoadNo) {
+                    const roadRe = new RegExp(`${targetRoad.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*${targetRoadNo.replace('-', '\\-')}(?:[^0-9\\-]|$)`);
+                    if (roadRe.test(rowAddr) || roadRe.test(rowAddrCompact)) {
+                        score += 100;
+                        addrMatched = true;
+                    }
+                }
+
+                // 2) 법정동 + 지번 정밀 매칭
+                if (!addrMatched && targetDong && targetJibun) {
+                    const dongOk = (rowDong && (rowDong.includes(targetDong) || targetDong.includes(rowDong))) || rowAddr.includes(targetDong);
+                    if (dongOk) {
+                        const jibunRe = new RegExp(`(?:^|[^0-9\\-])${targetJibun.replace('-', '\\-')}(?:[^0-9\\-]|$)`);
+                        if (jibunRe.test(rowAddr)) {
+                            score += 90;
+                            addrMatched = true;
+                        }
+                    }
+                }
+
+                // 3) 대상물명 매칭
+                let nameMatched = false;
+                if (rowObjCompact.length >= 2) {
+                    for (const tn of targetNames) {
+                        if (rowObjCompact === tn) { score += 50; nameMatched = true; break; }
+                        if (tn.length >= 3 && rowObjCompact.length >= 3 && (rowObjCompact.includes(tn) || tn.includes(rowObjCompact))) {
+                            score += 35; nameMatched = true; break;
+                        }
+                    }
+                }
+
+                // 4) 사용승인일자 매칭
+                if (targetYmd.length === 8 && rowYmd.length === 8) {
+                    if (targetYmd === rowYmd) score += 25;
+                    else if (targetYmd.substring(0, 6) === rowYmd.substring(0, 6)) score += 10;
+                }
+
+                const dongExactOk = Boolean(targetDong && ((rowDong && (rowDong === targetDong || rowDong.includes(targetDong) || targetDong.includes(rowDong))) || rowAddr.includes(targetDong)));
+                const ymdExactOk = Boolean(targetYmd.length === 8 && rowYmd === targetYmd);
+
+                // Tier 1: 도로명+번호 또는 법정동+지번 직접 일치(>=90)
+                // Tier 2: 공식 가이드처럼 bassAdres가 읍면동까지만 있는 경우, 같은 시군구+읍면동+대상물명 일치
+                const isQualified = (score >= 90) || (dongExactOk && nameMatched);
+                if (isQualified && score > bestScore) {
+                    bestScore = score;
+                    bestItem = row;
+                }
+                if (dongExactOk && ymdExactOk) {
+                    exactDongYmdCandidates.push({ row, score });
+                }
+            }
+            // Tier 3: 대상물명이 다르거나 비어 있어도, 같은 시군구+읍면동+사용승인일자(8자리) 일치 후보가 단독 1건이면 채택
+            if (!bestItem && exactDongYmdCandidates.length === 1) {
+                return exactDongYmdCandidates[0].row;
+            }
+            return bestItem;
+        };
+
+        const fetchAccomFireSysCrossCheck = async (it, useAprRaw, effectiveBldName = '', effectiveContext = '') => {
+            if (typeof FIRE_SYS_API_URL === 'undefined' || !FIRE_SYS_API_URL || typeof BLD_HUB_SERVICE_KEY === 'undefined') return null;
+            const ctpvNm = extractCtpvNmForFireApi(it, effectiveContext);
+            if (!ctpvNm) return null;
+            const yrMatch = String(useAprRaw || '').replace(/\D/g, '').match(/^(19\d\d|20\d\d)/);
+            const useAprvY = yrMatch ? yrMatch[1] : '';
+            const cacheKey = `${ctpvNm}|${useAprvY || 'NOYR'}`;
+
+            let rows = accomFireSysCache.get(cacheKey);
+            if (!rows) {
+                const buildUrl = (pageNo) =>
+                    `${FIRE_SYS_API_URL}?serviceKey=${BLD_HUB_SERVICE_KEY}&pageNo=${pageNo}&numOfRows=99&resultType=json&ctpvNm=${encodeURIComponent(ctpvNm)}` +
+                    (useAprvY ? `&useAprvY=${encodeURIComponent(useAprvY)}` : '');
+                try {
+                    const firstPage = await fetchOpenApiPageWithFallback([buildUrl(1)], 4500);
+                    let allItems = Array.isArray(firstPage?.items) ? [...firstPage.items] : [];
+                    const totalCount = firstPage?.totalCount || allItems.length;
+                    // 공식 가이드 numOfRows 항목크기(2자리, 최대 99) 준수 + 사용승인연도 지정 시 최대 5페이지(495건) 병렬 조회
+                    if (useAprvY && totalCount > allItems.length && allItems.length > 0) {
+                        const maxPages = Math.min(5, Math.ceil(totalCount / 99));
+                        const extraPages = [];
+                        for (let p = 2; p <= maxPages; p++) {
+                            extraPages.push(fetchOpenApiPageWithFallback([buildUrl(p)], 4000).catch(() => ({ items: [] })));
+                        }
+                        const extraResults = await Promise.all(extraPages);
+                        extraResults.forEach(r => {
+                            if (Array.isArray(r?.items) && r.items.length > 0) allItems.push(...r.items);
+                        });
+                    }
+                    rows = allItems;
+                    if (rows.length > 0) accomFireSysCache.set(cacheKey, rows);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return matchAccomFireSysItem(rows, it, useAprRaw, effectiveBldName, effectiveContext);
+        };
 
         const fetchOpenApiPageWithFallback = async (urls, timeoutMs = 5500) => {
             const cacheKey = urls.join('||');
@@ -15241,8 +15434,73 @@
                 }
             };
 
-            // 첨부 툴킷과 동일하게 표제부 기준 스프링클러·소방시설 결과를 즉시 표시 (층별현황 수신 시 자동 정밀 보정)
-            applySprinklerCardStyle(lawEval.text, lawEval.detail, 'final');
+            let latestLawSp = { text: lawEval.text || '', detail: lawEval.detail || '' };
+            let latestAccomFireMatch = null;
+            const renderCombinedSprinklerCard = () => {
+                if (latestAccomFireMatch) {
+                    const m = latestAccomFireMatch;
+                    const isYn = (v) => /^(Y|YES|1|O|설치|있음)$/i.test(String(v || '').trim());
+                    const fmtYn = (v) => {
+                        const s = String(v || '').trim();
+                        return s ? s : '-';
+                    };
+                    const hasNormal = isYn(m.sprklHYn) || isYn(m.sprklAvYn);
+                    const hasEarly = isYn(m.frspnSprklHYn) || isYn(m.frspnSprklAvYn);
+                    const hasSimple = isYn(m.spskHYn) || isYn(m.spskAvYn);
+
+                    let finalText = '';
+                    let pillText = '';
+                    if (hasNormal || hasEarly) {
+                        finalText = (hasEarly && !hasNormal)
+                            ? '화재조기진압용 스프링클러 설치 (소방청 DB 확인)'
+                            : '스프링클러 설치 (소방청 DB 확인)';
+                        pillText = '소방청 확인 · 설치';
+                        spCard.style.background = '#ecfdf5';
+                        spCard.style.borderColor = '#10b981';
+                        spIcon.textContent = '💦';
+                        spPill.style.background = '#10b981';
+                        spText.style.color = '#065f46';
+                        spDetail.style.color = '#047857';
+                    } else if (hasSimple) {
+                        finalText = '간이 스프링클러 설치 (소방청 DB 확인)';
+                        pillText = '소방청 확인 · 간이';
+                        spCard.style.background = '#f0fdfa';
+                        spCard.style.borderColor = '#0d9488';
+                        spIcon.textContent = '💧';
+                        spPill.style.background = '#0d9488';
+                        spText.style.color = '#0f766e';
+                        spDetail.style.color = '#0f766e';
+                    } else {
+                        finalText = '스프링클러 미설치 (소방청 DB 확인)';
+                        pillText = '소방청 확인 · 미설치';
+                        spCard.style.background = '#f8fafc';
+                        spCard.style.borderColor = '#cbd5e1';
+                        spIcon.textContent = 'ℹ️';
+                        spPill.style.background = '#64748b';
+                        spText.style.color = '#334155';
+                        spDetail.style.color = '#475569';
+                    }
+                    spPill.textContent = pillText;
+                    spText.textContent = finalText;
+                    const dbSummary = `소방청 숙박 DB(${m.objNm || '확인됨'}): 일반(H:${fmtYn(m.sprklHYn)}/AV:${fmtYn(m.sprklAvYn)}), 간이(H:${fmtYn(m.spskHYn)}/AV:${fmtYn(m.spskAvYn)}), 조기진압(H:${fmtYn(m.frspnSprklHYn)}/AV:${fmtYn(m.frspnSprklAvYn)})`;
+                    const lawSummary = `법령판정: ${latestLawSp.text || '미해당'}${latestLawSp.detail ? ' · ' + latestLawSp.detail : ''}`;
+                    const finalDetail = `${dbSummary} | ${lawSummary}`;
+                    spDetail.textContent = finalDetail;
+                    if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
+                        currentFacilitySelectedBld.sprinklerText = finalText;
+                        currentFacilitySelectedBld.sprinklerDetail = finalDetail;
+                    }
+                    return;
+                }
+                applySprinklerCardStyle(latestLawSp.text, latestLawSp.detail, 'final');
+                if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
+                    currentFacilitySelectedBld.sprinklerText = latestLawSp.text;
+                    currentFacilitySelectedBld.sprinklerDetail = latestLawSp.detail;
+                }
+            };
+
+            // 표제부 기준 스프링클러·소방시설 결과를 즉시 표시 (층별현황·숙박시설 소방청 DB 수신 시 자동 보정)
+            renderCombinedSprinklerCard();
             currentFacilitySelectedBld = {
                 item: it,
                 ledgerType: ledgerType || '',
@@ -15457,11 +15715,8 @@
                 );
                 const finalSpText = filteredFlr.length > 0 ? (refinedLawEval.text || '') : (refinedLawEval.text || lawEval.text || '');
                 const finalSpDetail = filteredFlr.length > 0 ? (refinedLawEval.detail || '') : (refinedLawEval.text ? refinedLawEval.detail : (refinedLawEval.detail || lawEval.detail || ''));
-                applySprinklerCardStyle(finalSpText, finalSpDetail, 'final');
-                if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it) {
-                    currentFacilitySelectedBld.sprinklerText = finalSpText;
-                    currentFacilitySelectedBld.sprinklerDetail = finalSpDetail;
-                }
+                latestLawSp = { text: finalSpText, detail: finalSpDetail };
+                renderCombinedSprinklerCard();
                 renderFireFacilitiesPanel(evaluateAllFireFacilities(it, ledgerType, effectiveContext, effectiveBldName, filteredFlr, { text: finalSpText, detail: finalSpDetail }));
             });
 
@@ -15490,6 +15745,18 @@
                 aptHallBadgeEl.style.display = 'inline-flex';
                 aptHallBadgeEl.dataset.kaptConfirmed = '1';
             }).catch(() => {});
+
+            // (D) 숙박시설 전용 소방청 특정소방대상물 소방시설정보서비스 API 교차검증 (비숙박 건축물은 호출 생략)
+            const isLodgingForFireApi = /숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도|생활숙박/.test(
+                `${it.mainPurpsCdNm || ''} ${it.etcPurps || ''} ${ledgerType || ''}`
+            );
+            if (isLodgingForFireApi) {
+                fetchAccomFireSysCrossCheck(it, useAprRaw, effectiveBldName, effectiveContext).then((matchedAccom) => {
+                    if (myRenderSeq !== activeBldDetailRenderSeq || !matchedAccom) return;
+                    latestAccomFireMatch = matchedAccom;
+                    renderCombinedSprinklerCard();
+                }).catch(() => {});
+            }
 
             activeBldDetailBgPromise = Promise.allSettled([
                 flrBgTask.catch(() => {}),
