@@ -12743,7 +12743,7 @@
         }
 
         // 건축물대장 표제부 항목에서 대장종류 또는 주용도 명칭 추출 (예: 일반건축물, 복합건축물, 오피스텔, 다가구주택, 아파트, 근생시설 등)
-        function resolveBuildingLedgerType(bestItem, combinedContext = '') {
+        function resolveBuildingLedgerType(bestItem, combinedContext = '', flrItems = null) {
             if (bestItem) {
                 const dongNm = (bestItem.dongNm || '').trim();
                 const regstrKindNm = (bestItem.regstrKindCdNm || '').trim();
@@ -12762,7 +12762,29 @@
                     return '지식산업센터';
                 }
 
-                // -1) 도시형생활주택 우선 판별
+                // -1-a) 기타기재사항(etcPurps)·표제부·층별현황(flrItems) 기반 2개 이상 주된 용도 혼재(복합건축물) 판별
+                const ledgerMajorCats = new Set();
+                // 별도 부속동(상가동·유치원 등)이 아닌 경우에만 복합 용도 집계
+                const isSeparateAuxDong = Boolean(dongNm && !/아파트/.test(dongNm) && detectPdfFacilityCategory(dongNm) && detectPdfFacilityCategory(dongNm) !== 'apt');
+                if (!isSeparateAuxDong) {
+                    if (mainPurps) extractMajorCategoriesFromText(mainPurps, ledgerMajorCats, false);
+                    if (etcPurps) extractMajorCategoriesFromText(etcPurps, ledgerMajorCats, false);
+                    if (Array.isArray(flrItems) && flrItems.length > 0) {
+                        flrItems.forEach(f => {
+                            const fMain = String(f.mainPurpsCdNm || '').trim();
+                            const fEtc = String(f.etcPurps || '').trim();
+                            if (fMain) extractMajorCategoriesFromText(fMain, ledgerMajorCats, false);
+                            if (fEtc) extractMajorCategoriesFromText(fEtc, ledgerMajorCats, Boolean(fMain && fMain !== '기타'));
+                        });
+                    }
+                }
+                const isExplicitComplexName = /복합\s*건축물|주상\s*복합|복합\s*주거\s*시설|복합\s*시설|복합\s*건물/.test(`${bldNm} ${etcPurps} ${mainPurps}`);
+                const hasSingleHouseOnly = /단독주택|다가구|다중주택/.test(purpsPair) && !/공동주택|아파트|다세대|연립/.test(purpsPair);
+                if (!isSeparateAuxDong && !hasSingleHouseOnly && (isExplicitComplexName || ledgerMajorCats.size >= 2)) {
+                    return '복합건축물';
+                }
+
+                // -1-b) 순수 도시형생활주택 판별 (업무·근생 등 복합 용도가 없는 경우)
                 if (/도시형\s*생활\s*주택/.test(mergedPurps) || /도시형\s*생활\s*주택/.test(combinedContext)) {
                     return '도시형생활주택';
                 }
@@ -13992,6 +14014,51 @@
             return '';
         }
 
+        // 기타기재사항(etcPurps) 및 표제부/층별 용도에서 공백·괄호·구분자로 나열된 모든 주된 시설 용도 추출
+        // 예: "공동주택 업무시설" -> {'apt', 'office'}, "제2종근린생활시설(사무소, 학원)" -> {'comm'} (괄호 내 세부용도 오탐 방지)
+        const COMPLEX_MAJOR_PDF_CATS = new Set([
+            'apt', 'lodging', 'comm', 'medical', 'elderly', 'culture', 'religion', 'sports',
+            'sales', 'transport', 'edu', 'training', 'office', 'warehouse', 'amusement',
+            'factory', 'broadcast', 'tourism', 'funeral'
+        ]);
+        const ACCESSORY_ONLY_PDF_RE = /^(?:부속|부속용도|부속시설|부대복리시설|부대시설|복리시설|지하주차장|주차장|기계식주차|차고|기계실|전기실|발전실|변전실|펌프실|물탱크실?|계단실|복도|로비|홀|관리사무소|관리실|경비실|안내실|피트|PIT|옥탑|보일러실|공조실|창고|화장실|쓰레기|분리수거|주민공동시설|경로당|어린이놀이터|문주|경비초소|방재실|MDF|EPS|TPS|설비실|저수조|정화조|엘리베이터|승강기|현관|전실|기타|\s|\(|\)|-|·)+$/i;
+        const ACCESSORY_STRIP_PDF_RE = /부대복리시설|부대시설|복리시설|부속용도|부속시설|관리사무소|관리실|경비실|경비초소|지하주차장|기계식주차장?|주차장|기계실|전기실|발전실|변전실|펌프실|물탱크실?|계단실|보일러실|공조실|주민공동시설|경로당|어린이놀이터|방재실|분리수거장?|설비실|저수조|정화조|PIT/gi;
+        const EXPLICIT_MAJOR_GROUP_RE = /공동주택|업무시설|오피스텔|근린생활시설|제[12]종근린생활시설?|판매시설|숙박시설|의료시설|교육연구시설|문화\s*및\s*집회시설?|문화집회시설?|운동시설|노유자시설|종교시설|창고시설|위락시설|방송통신시설|운수시설|장례시설|공장/g;
+
+        function extractMajorCategoriesFromText(str, targetSet, explicitOnly = false) {
+            const raw = String(str || '').trim();
+            if (!raw || ACCESSORY_ONLY_PDF_RE.test(raw)) return targetSet;
+            const cleanedRaw = raw.replace(ACCESSORY_STRIP_PDF_RE, ' ');
+            const addIfMajor = (tok) => {
+                if (!tok || ACCESSORY_ONLY_PDF_RE.test(tok)) return;
+                const cat = detectPdfFacilityCategory(tok);
+                if (cat && COMPLEX_MAJOR_PDF_CATS.has(cat)) targetSet.add(cat);
+            };
+            if (explicitOnly) {
+                const explicitMatches = cleanedRaw.match(EXPLICIT_MAJOR_GROUP_RE) || [];
+                explicitMatches.forEach(addIfMajor);
+                return targetSet;
+            }
+            // 1) 괄호 바깥의 최상위 용도어(공백·쉼표·슬래시·가운뎃점 등 구분) 추출
+            const outsideParens = cleanedRaw
+                .replace(/\([^)]*\)/g, ' ')
+                .replace(/\[[^\]]*\]/g, ' ')
+                .replace(/문화\s*및\s*집회/g, '문화및집회')
+                .replace(/동물\s*및\s*식물/g, '동물및식물')
+                .replace(/교정\s*및\s*군사/g, '교정및군사')
+                .replace(/단지내\s*상가/g, '단지내상가')
+                .replace(/제\s*[12]\s*종\s*근린\s*생활\s*시설?/g, '근린생활시설')
+                .replace(/도시형\s*생활\s*주택/g, '도시형생활주택');
+            outsideParens.split(/[,/·ㆍ+\s]+|(?:\s*및\s*)/).filter(Boolean).forEach(addIfMajor);
+            // 2) 괄호 내부는 명시적 시설군 키워드(오피스텔·근린생활시설·업무시설 등)만 추출하여 '제2종근생(사무소)' 등 오탐 차단
+            const parenMatches = cleanedRaw.match(/\(([^)]*)\)/g) || [];
+            parenMatches.forEach(pm => {
+                const explicitInParen = pm.match(EXPLICIT_MAJOR_GROUP_RE) || [];
+                explicitInParen.forEach(addIfMajor);
+            });
+            return targetSet;
+        }
+
         // 아파트 단지 내 별도 동(단지내 상가, 유치원, 어린이집, 노인정, 경로당, 관리동, 도서관 등) 실제 용도 보정
         function resolveAptComplexDongOverride(primaryCat, dongNm, etcPurps, ledgerType, flrUsageStrings, flrItems) {
             if (primaryCat !== 'apt') return primaryCat;
@@ -14127,40 +14194,25 @@
 
             // 복합건축물 판별 (소방시설법 시행령 별표2: 1개 건축물에 2개 이상 주된 특정소방대상물 용도 혼재)
             // 부속용도(주차장·기계실·전기실·관리사무소·경비실·계단실·주민공동시설·경로당 등)는 복합 용도 산정에서 제외
-            const COMPLEX_MAJOR_CATS = new Set([
-                'apt', 'lodging', 'comm', 'medical', 'elderly', 'culture', 'religion', 'sports',
-                'sales', 'transport', 'edu', 'training', 'office', 'warehouse', 'amusement',
-                'factory', 'broadcast', 'tourism', 'funeral'
-            ]);
-            const ACCESSORY_ONLY_RE = /^(?:부속|지하주차장|주차장|기계식주차|차고|기계실|전기실|발전실|변전실|펌프실|물탱크|계단실|복도|로비|홀|관리사무소|관리실|경비실|안내실|피트|옥탑|보일러실|공조실|창고|화장실|쓰레기|분리수거|주민공동시설|경로당|어린이놀이터|문주|경비초소|방재실|MDF|EPS|TPS|설비실|저수조|정화조|엘리베이터|승강기|현관|전실|\s|\(|\)|-|·)+$/;
             const distinctMajorCats = new Set();
-            const addMajorCatFromText = (txt) => {
-                const cleaned = String(txt || '').trim();
-                if (!cleaned || ACCESSORY_ONLY_RE.test(cleaned)) return;
-                // 관리사무소/경비실/주차장 등이 포함된 단순 부속 설명이 '사무소'→office 등으로 오탐되지 않도록 제거 후 분류
-                const stripped = cleaned.replace(/관리사무소|경비실|주차장|기계실|전기실|발전실|변전실|펌프실|계단실|보일러실|주민공동시설|경로당|방재실/g, '').trim();
-                if (!stripped) return;
-                const cat = detectPrimaryCategory(stripped);
-                if (cat && COMPLEX_MAJOR_CATS.has(cat)) distinctMajorCats.add(cat);
-            };
-            if (primaryCat && COMPLEX_MAJOR_CATS.has(primaryCat)) distinctMajorCats.add(primaryCat);
+            if (primaryCat && COMPLEX_MAJOR_PDF_CATS.has(primaryCat)) distinctMajorCats.add(primaryCat);
             if (etcPurpsStr) {
-                etcPurpsStr.split(/[,/·ㆍ+]|(?:\s+및\s+)/).forEach(part => addMajorCatFromText(part));
+                extractMajorCategoriesFromText(etcPurpsStr, distinctMajorCats, false);
             }
             if (Array.isArray(flrItems) && flrItems.length > 0) {
                 flrItems.forEach(f => {
                     const pMain = String(f.mainPurpsCdNm || '').trim();
                     const pEtc = String(f.etcPurps || '').trim();
-                    addMajorCatFromText(pMain);
-                    if (pEtc) {
-                        pEtc.split(/[,/·ㆍ+]|(?:\s+및\s+)/).forEach(part => addMajorCatFromText(part));
-                    }
+                    if (pMain) extractMajorCategoriesFromText(pMain, distinctMajorCats, false);
+                    if (pEtc) extractMajorCategoriesFromText(pEtc, distinctMajorCats, Boolean(pMain && pMain !== '기타'));
                 });
             }
-            const isComplexBld = /복합건축물|주상복합/.test(`${primaryPurpsStr} ${etcPurpsStr}`) || (distinctMajorCats.size >= 2);
-            const complexRuleLabel = (ymd >= 20050101)
-                ? `복합건축물 ('05.1.1) 연면적 5,000㎡ 이상 전층`
-                : `복합건축물 ('95.8.10) 연면적 5,000㎡ 이상 전층`;
+            const isComplexBld = ledgerTypeStr === '복합건축물' || /복합건축물|주상복합|복합주거시설/.test(`${primaryPurpsStr} ${etcPurpsStr} ${bldNameHint || ''}`) || (distinctMajorCats.size >= 2);
+            const complexRuleLabel = (ymd >= 20180128)
+                ? `복합건축물 ('18.1.28) 연면적 5,000㎡ 이상 전층`
+                : (ymd >= 20050101
+                    ? `복합건축물 또는 교육연구시설(기숙사) ('05.1.1) 연면적 5,000㎡ 이상 전층`
+                    : `복합건축물 ('95.8.10) 연면적 5,000㎡ 이상 전층`);
 
             // 용도 분류 (스프링클러 설비.pdf 1~27번 기준 — 주용도 단일 매칭)
             const isAptOrDorm = (primaryCat === 'apt');
@@ -14213,6 +14265,11 @@
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`지하상가 연면적 1,000㎡ 이상 (터널 제외)`) };
                 }
                 return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(`지하상가 연면적 1,000㎡ 이상 (터널 제외)`) };
+            }
+
+            // 0. 복합건축물 연면적 5,000㎡ 이상 전층 우선 적용 (PDF p.2 1-1 공동주택 연혁: '95.8.10 / '05.1.1 / '18.1.28)
+            if (isComplexBld && totalAreaNum >= 5000 && ymd >= 19950810) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
             }
 
             // 1. 공동주택 (아파트등, 연립주택, 다세대주택, 기숙사) - PDF p.1~2
@@ -16143,16 +16200,22 @@
                     }
                 }
 
-                // 층별현황 기반 스프링클러 및 소방시설 최종 정밀 반영
+                // 층별현황 기반 대장유형(복합건축물 등) 및 스프링클러·소방시설 최종 정밀 반영
+                const refinedLedgerType = (filteredFlr.length > 0)
+                    ? (resolveBuildingLedgerType(it, effectiveContext, filteredFlr) || ledgerType)
+                    : ledgerType;
+                if (currentFacilitySelectedBld && currentFacilitySelectedBld.item === it && refinedLedgerType) {
+                    currentFacilitySelectedBld.ledgerType = refinedLedgerType;
+                }
                 const refinedLawEval = evaluateSprinklerForFacilityModal(
-                    it.mainPurpsCdNm || ledgerType,
+                    it.mainPurpsCdNm || refinedLedgerType,
                     it.etcPurps || '',
                     useAprRaw,
                     `${grnd}/${ugrnd}`,
                     totAreaNum,
                     effectiveContext,
                     effectiveBldName,
-                    ledgerType,
+                    refinedLedgerType,
                     archAreaNum,
                     filteredFlr,
                     spExtraMeta
