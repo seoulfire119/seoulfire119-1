@@ -13899,7 +13899,7 @@
 
         // 안전지도 텍스트 및 주소에서 아파트/건물 타겟 동 번호(예: 112동, 제112동 -> 112) 정밀 추출 (법정동인 '대치동' 등과 엄격 분리)
 
-        function evaluateSprinklerForFacilityModal(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null) {
+        function evaluateSprinklerForFacilityModal(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null, extraMeta = null) {
             let ymd = parseInt(String(useAprDay || '').replace(/\D/g, '').substring(0, 8), 10) || 0;
             const isUnknownDate = (ymd < 19000101);
             if (isUnknownDate) ymd = 20260101;
@@ -13917,14 +13917,18 @@
 
             const totalAreaNum = parseFloat(totArea) || 0;
             const archAreaNum = parseFloat(archArea) || 0;
+            const strctStr = String((extraMeta && extraMeta.strct) || '').trim();
+            const heitNum = parseFloat((extraMeta && extraMeta.heit) || '0') || 0;
             const makeSpDetail = (ruleDesc) => `적용기준: ${ruleDesc}${dateNote}`;
 
-            // 층별현황(flrItems) 기반 정밀 바닥면적 및 층별 용도 분석
+            // 층별현황(flrItems) 기반 정밀 바닥면적(동일 층 분할행 합산) 및 층별 용도 분석
             let flrUsageStrings = '';
             let maxFlr4PlusOrSubArea = 0;
+            let maxGrnd4PlusArea = 0;
             let maxSubArea = 0;
             let maxSingleFlrArea = 0;
             let commAreaSum = 0;
+            const flrAreaByKey = new Map();
 
             if (Array.isArray(flrItems) && flrItems.length > 0) {
                 flrItems.forEach(f => {
@@ -13934,23 +13938,43 @@
                     const area = parseFloat(String(f.area || '0').replace(/[^0-9.]/g, '')) || 0;
                     const pStr = `${f.mainPurpsCdNm || ''} ${f.etcPurps || ''}`;
                     flrUsageStrings += ' ' + pStr;
-                    if (area > maxSingleFlrArea) maxSingleFlrArea = area;
+
                     const isSub = (gb === '10' || gbNm.includes('지하'));
-                    const isGrnd4Plus = ((gb === '20' || gbNm.includes('지상') || (!isSub && !gbNm.includes('옥탑'))) && flrNo >= 4);
-                    if (isSub && area > maxSubArea) maxSubArea = area;
-                    if ((isSub || isGrnd4Plus) && area > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = area;
-                    if (/근린생활|의원|치과|한의원|음식점|고시원|사무소|소매점|학원|독서실|체력단련|산후조리|조산원/.test(pStr)) {
+                    const isRoof = (gb === '30' || gbNm.includes('옥탑'));
+                    const isGrnd = !isSub && !isRoof;
+                    if (!isRoof && flrNo > 0) {
+                        const flrKey = `${isSub ? 'B' : 'F'}${flrNo}`;
+                        flrAreaByKey.set(flrKey, (flrAreaByKey.get(flrKey) || 0) + area);
+                    } else if (area > maxSingleFlrArea) {
+                        maxSingleFlrArea = area;
+                    }
+                    if (/근린생활|의원|치과|한의원|음식점|고시원|소매점|학원|독서실|체력단련|산후조리|조산원/.test(pStr)) {
                         commAreaSum += area;
+                    }
+                });
+                flrAreaByKey.forEach((sumArea, flrKey) => {
+                    if (sumArea > maxSingleFlrArea) maxSingleFlrArea = sumArea;
+                    if (flrKey.startsWith('B')) {
+                        if (sumArea > maxSubArea) maxSubArea = sumArea;
+                        if (sumArea > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = sumArea;
+                    } else if (flrKey.startsWith('F')) {
+                        const num = parseFloat(flrKey.slice(1)) || 0;
+                        if (num >= 4) {
+                            if (sumArea > maxGrnd4PlusArea) maxGrnd4PlusArea = sumArea;
+                            if (sumArea > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = sumArea;
+                        }
                     }
                 });
             } else {
                 const estFlr = archAreaNum > 0 ? archAreaNum : (totalAreaNum > 0 && (grndFlr + ugrndFlr) > 0 ? (totalAreaNum / (grndFlr + ugrndFlr)) : 0);
                 maxSingleFlrArea = estFlr;
+                if (grndFlr >= 4) maxGrnd4PlusArea = estFlr;
                 if (grndFlr >= 4 || ugrndFlr >= 1) maxFlr4PlusOrSubArea = estFlr;
                 if (ugrndFlr >= 1) maxSubArea = estFlr;
             }
 
             const hasFlr1000In4PlusOrSub = (maxFlr4PlusOrSubArea >= 1000);
+            const hasFlr1000InGrnd4Plus = (maxGrnd4PlusArea >= 1000);
             const primaryPurpsStr = String(mainPurpsCdNm || '').trim();
             const etcPurpsStr = String(etcPurps || '').trim();
             const ledgerTypeStr = String(ledgerType || '').trim();
@@ -13964,11 +13988,11 @@
                 const s = String(str || '').trim();
                 if (!s) return '';
                 if (/공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(s)) return 'apt';
-                if (/숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도/.test(s)) return 'lodging';
+                if (/숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도|생활숙박/.test(s)) return 'lodging';
                 if (/근린생활|제1종근린|제2종근린|근생|휴게음식점|일반음식점/.test(s)) return 'comm';
                 if (/의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(s)) return 'medical';
                 if (/노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(s)) return 'elderly';
-                if (/문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장/.test(s)) return 'culture';
+                if (/문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장|동물원|식물원/.test(s)) return 'culture';
                 if (/종교시설|종교|교회|성당|사찰/.test(s)) return 'religion';
                 if (/운동시설|체육관|운동장/.test(s)) return 'sports';
                 if (/판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(s)) return 'sales';
@@ -13983,12 +14007,12 @@
                 if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
                 if (/위험물/.test(s)) return 'hazmat';
                 if (/방송통신/.test(s)) return 'broadcast';
-                if (/발전시설/.test(s)) return 'power';
+                if (/발전시설|전기저장/.test(s)) return 'power';
                 if (/관광휴게/.test(s)) return 'tourism';
                 if (/장례시설|장례식장/.test(s)) return 'funeral';
                 if (/동물 및 식물|동식물|축사/.test(s)) return 'animal';
                 if (/자원순환|분뇨|쓰레기/.test(s)) return 'recycle';
-                if (/교정 및 군사|군사시설/.test(s)) return 'military';
+                if (/교정 및 군사|군사시설|교도소|구치소|소년원|유치장/.test(s)) return 'military';
                 if (/묘지관련/.test(s)) return 'cemetery';
                 return '';
             };
@@ -14000,7 +14024,44 @@
                 detectPrimaryCategory(ledgerTypeStr) ||
                 (hasExplicitMainPurps ? '' : detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`));
 
-            // 용도 분류 (스프링클러 설비.pdf 목차 1~30번 기준 — 주용도 단일 매칭)
+            // 복합건축물 판별 (소방시설법 시행령 별표2: 1개 건축물에 2개 이상 주된 특정소방대상물 용도 혼재)
+            // 부속용도(주차장·기계실·전기실·관리사무소·경비실·계단실·주민공동시설·경로당 등)는 복합 용도 산정에서 제외
+            const COMPLEX_MAJOR_CATS = new Set([
+                'apt', 'lodging', 'comm', 'medical', 'elderly', 'culture', 'religion', 'sports',
+                'sales', 'transport', 'edu', 'training', 'office', 'warehouse', 'amusement',
+                'factory', 'broadcast', 'tourism', 'funeral'
+            ]);
+            const ACCESSORY_ONLY_RE = /^(?:부속|지하주차장|주차장|기계식주차|차고|기계실|전기실|발전실|변전실|펌프실|물탱크|계단실|복도|로비|홀|관리사무소|관리실|경비실|안내실|피트|옥탑|보일러실|공조실|창고|화장실|쓰레기|분리수거|주민공동시설|경로당|어린이놀이터|문주|경비초소|방재실|MDF|EPS|TPS|설비실|저수조|정화조|엘리베이터|승강기|현관|전실|\s|\(|\)|-|·)+$/;
+            const distinctMajorCats = new Set();
+            const addMajorCatFromText = (txt) => {
+                const cleaned = String(txt || '').trim();
+                if (!cleaned || ACCESSORY_ONLY_RE.test(cleaned)) return;
+                // 관리사무소/경비실/주차장 등이 포함된 단순 부속 설명이 '사무소'→office 등으로 오탐되지 않도록 제거 후 분류
+                const stripped = cleaned.replace(/관리사무소|경비실|주차장|기계실|전기실|발전실|변전실|펌프실|계단실|보일러실|주민공동시설|경로당|방재실/g, '').trim();
+                if (!stripped) return;
+                const cat = detectPrimaryCategory(stripped);
+                if (cat && COMPLEX_MAJOR_CATS.has(cat)) distinctMajorCats.add(cat);
+            };
+            if (primaryCat && COMPLEX_MAJOR_CATS.has(primaryCat)) distinctMajorCats.add(primaryCat);
+            if (etcPurpsStr) {
+                etcPurpsStr.split(/[,/·ㆍ+]|(?:\s+및\s+)/).forEach(part => addMajorCatFromText(part));
+            }
+            if (Array.isArray(flrItems) && flrItems.length > 0) {
+                flrItems.forEach(f => {
+                    const pMain = String(f.mainPurpsCdNm || '').trim();
+                    const pEtc = String(f.etcPurps || '').trim();
+                    addMajorCatFromText(pMain);
+                    if (pEtc) {
+                        pEtc.split(/[,/·ㆍ+]|(?:\s+및\s+)/).forEach(part => addMajorCatFromText(part));
+                    }
+                });
+            }
+            const isComplexBld = /복합건축물|주상복합/.test(`${primaryPurpsStr} ${etcPurpsStr}`) || (distinctMajorCats.size >= 2);
+            const complexRuleLabel = (ymd >= 20050101)
+                ? `복합건축물 ('05.1.1) 연면적 5,000㎡ 이상 전층`
+                : `복합건축물 ('95.8.10) 연면적 5,000㎡ 이상 전층`;
+
+            // 용도 분류 (스프링클러 설비.pdf 1~27번 기준 — 주용도 단일 매칭)
             const isAptOrDorm = (primaryCat === 'apt');
             const isRowOrMultiHouse = isAptOrDorm && /연립주택|연립|다세대주택|다세대/.test(subPurps) && !/아파트/.test(subPurps);
             const isComm = (primaryCat === 'comm');
@@ -14013,8 +14074,11 @@
             const isTransport = (primaryCat === 'transport');
             const isMedical = (primaryCat === 'medical');
             const isNursingHosp = isMedical && /요양병원/.test(subPurps);
-            const isPsychOrRehab = isMedical && /정신의료|의료재활/.test(subPurps);
+            const isPsych = isMedical && /정신의료|정신병원/.test(subPurps);
+            const isPsychOrRehab = isMedical && /정신의료|정신병원|의료재활|재활시설/.test(subPurps);
+            const isHospitalLevel = isMedical && !/격리병원|전염병원|마약진료소/.test(subPurps) && (/종합병원|치과병원|한방병원|병원/.test(subPurps) || !isPsychOrRehab);
             const isEdu = (primaryCat === 'edu');
+            const isSchool = isEdu && /학교/.test(subPurps);
             const isElderlyChild = (primaryCat === 'elderly');
             const isTraining = (primaryCat === 'training');
             const isSports = (primaryCat === 'sports');
@@ -14024,8 +14088,31 @@
             const isFactory = (primaryCat === 'factory');
             const isWarehouse = (primaryCat === 'warehouse');
             const isLogisticsTerminal = isWarehouse && /물류터미널/.test(subPurps);
-            const isUndergroundMall = /지하상가|지하가/.test(`${primaryPurpsStr} ${etcPurpsStr}`);
-            const isComplexBld = /복합건축물|주상복합/.test(`${primaryPurpsStr} ${etcPurpsStr}`);
+            const isHazmat = (primaryCat === 'hazmat');
+            const isAnimal = (primaryCat === 'animal');
+            const isMilitary = (primaryCat === 'military');
+            const isPower = (primaryCat === 'power');
+            const isDetached = (primaryCat === 'detached');
+            const isUndergroundMall = /지하상가|지하가/.test(`${primaryPurpsStr} ${etcPurpsStr}`) && !/터널/.test(subPurps);
+            const isWoodenStrct = /목구조|일반목구조|통나무구조|목조/.test(`${strctStr} ${combinedContext || ''}`);
+
+            // 0. 단독주택 (다가구·다중주택 포함) — 특정소방대상물 스프링클러 의무대상 미해당
+            if (isDetached) {
+                return {
+                    isInstalled: false,
+                    type: 'none',
+                    text: '',
+                    detail: makeSpDetail(`단독주택 (특정소방대상물 스프링클러 의무대상 미해당)`)
+                };
+            }
+
+            // 27. 지하상가 (터널 제외) - PDF p.33
+            if (isUndergroundMall) {
+                if (totalAreaNum >= 1000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`지하상가 연면적 1,000㎡ 이상 (터널 제외)`) };
+                }
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(`지하상가 연면적 1,000㎡ 이상 (터널 제외)`) };
+            }
 
             // 1. 공동주택 (아파트등, 연립주택, 다세대주택, 기숙사) - PDF p.1~2
             if (isAptOrDorm) {
@@ -14033,13 +14120,13 @@
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`공동주택 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
                 }
                 if (ymd >= 20050101 && grndFlr >= 11) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`공동주택 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`공동주택 ('05.1.1) 층수가 11층 이상일 경우 전층`) };
                 }
-                if (ymd >= 20050101 && totalAreaNum >= 5000 && (isComplexBld || /기숙사/.test(rawPurps))) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`공동주택(복합·기숙사) ('05.1.1) 연면적 5,000㎡ 이상 전층`) };
+                if (ymd >= 20050101 && totalAreaNum >= 5000 && /기숙사/.test(rawPurps)) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`공동주택(기숙사) ('05.1.1) 연면적 5,000㎡ 이상 전층`) };
                 }
                 if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
                 }
                 if (ymd >= 19900701 && grndFlr >= 16) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 16층 이상 설치', detail: makeSpDetail(`공동주택 ('90.7.1) 16층 이상인 것은 16층 이상인 층`) };
@@ -14050,59 +14137,13 @@
                 if (ymd >= 20241201 && isRowOrMultiHouse) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설비 설치', detail: makeSpDetail(`공동주택 ('24.12.1) 연립주택 및 다세대주택 (주택전용 간이스프링클러설비)`) };
                 }
+                const unmetApt = (ymd >= 20180128)
+                    ? "공동주택 ('18.1.28) 6층 이상 모든 층"
+                    : (ymd >= 20050101 ? "공동주택 ('05.1.1) 11층 이상 전층" : "공동주택 ('90.7.1) 16층 이상 해당 층");
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetApt) };
             }
 
-            // 2. 의료시설 - PDF p.10
-            if (isMedical) {
-                if (isNursingHosp) {
-                    if (totalAreaNum >= 600) {
-                        return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설(요양병원) ('14.7.8 / '18.6.30 소급적용) 바닥면적 합계 600㎡ 이상 모든 층`) };
-                    }
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(요양병원) ('15.7.1 / '18.6.30 소급적용) 바닥면적 합계 600㎡ 미만 모든 층`) };
-                }
-                if (ymd >= 20180128 && grndFlr >= 6) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
-                }
-                if (isPsychOrRehab && ymd >= 20040530 && totalAreaNum >= 600) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설(정신의료기관) ('04.5.30) 바닥면적 합계 600㎡ 이상 모든 층`) };
-                }
-                if (ymd >= 20190806 && totalAreaNum >= 600) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('19.8.6) 병원급 바닥면적 합계 600㎡ 이상 모든 층`) };
-                }
-                if (ymd >= 20050101 && grndFlr >= 11) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
-                }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`의료시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
-                }
-                if (isPsychOrRehab && totalAreaNum >= 300 && totalAreaNum < 600) {
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(정신의료·재활시설) 바닥면적 합계 300㎡ 이상 600㎡ 미만 모든 층`) };
-                }
-                if (ymd >= 20190806 && totalAreaNum > 0 && totalAreaNum < 600) {
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('19.8.6) 병원급 바닥면적 합계 600㎡ 미만 모든 층`) };
-                }
-            }
-
-            // 3. 노유자시설 - PDF p.12
-            if (isElderlyChild) {
-                if (ymd >= 20180128 && grndFlr >= 6) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
-                }
-                if (totalAreaNum >= 600) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 바닥면적 합계 600㎡ 이상인 것은 모든 층`) };
-                }
-                if (hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`노유자시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
-                }
-                if (/노유자생활|요양원|생활시설/.test(fullContext)) {
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`노유자시설(노유자생활시설) ('14.2.4 소급적용) 모든 층`) };
-                }
-                if (totalAreaNum >= 300) {
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 바닥면적 합계 300㎡ 이상 600㎡ 미만 모든 층`) };
-                }
-            }
-
-            // 4. 근린생활시설 - PDF p.5
+            // 2. 근린생활시설 - PDF p.5
             if (isComm || isPostpartum || isInpatientClinic || isGosiwon) {
                 if (ymd >= 20180128 && grndFlr >= 6) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`근린생활시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
@@ -14114,7 +14155,7 @@
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`근린생활시설 ('05.1.1) 층수가 11층 이상일 경우 전층`) };
                 }
                 if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
                 }
                 if (ymd >= 19920728 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`근린생활시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
@@ -14124,7 +14165,7 @@
                 }
                 const effectiveCommArea = commAreaSum > 0 ? Math.max(commAreaSum, totalAreaNum) : totalAreaNum;
                 if (ymd >= 20040530 && effectiveCommArea >= 1000) {
-                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`근린생활시설 ('04.5.30) 근린생활시설 바닥면적의 합계가 1,000㎡ 이상 모든 층`) };
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`근린생활시설 ('04.5.30) 바닥면적의 합계가 1,000㎡ 이상 모든 층`) };
                 }
                 if (isPostpartum && ymd >= 20220225 && totalAreaNum < 600) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치', detail: makeSpDetail(`근린생활시설 ('22.2.25) 조산원·산후조리원으로서 연면적 600㎡ 미만 시설`) };
@@ -14135,9 +14176,13 @@
                 if (isGosiwon) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치 (고시원)', detail: makeSpDetail(`근린생활시설(고시원) 다중이용업소 간이스프링클러 의무 설치 대상`) };
                 }
+                const unmetComm = (ymd >= 20180128)
+                    ? "근린생활시설 ('18.1.28) 6층 이상 모든 층"
+                    : (ymd >= 20050101 ? "근린생활시설 ('05.1.1) 11층 이상 전층" : "근린생활시설 ('84.7.1) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층");
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetComm) };
             }
 
-            // 5. 문화 및 집회시설 (p.6) / 종교시설 (p.7) / 운동시설 (p.15)
+            // 3. 문화 및 집회시설 (p.6) / 4. 종교시설 (p.7) / 11. 운동시설 (p.15)
             if (isCulture || isReligion || isSports) {
                 const facLabel = isCulture ? '문화 및 집회시설' : (isReligion ? '종교시설' : '운동시설');
                 if (ymd >= 20180128 && grndFlr >= 6) {
@@ -14146,22 +14191,44 @@
                 if (ymd >= 20050101 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('05.1.1) 층수가 11층 이상일 경우 전층`) };
                 }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
                 if (isCulture && /영화|극장/.test(fullContext) && ((maxSubArea >= 500) || (maxSingleFlrArea >= 1000) || (totalAreaNum >= 1000))) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`문화 및 집회시설(영화상영관) 지하·무창층 500㎡ 이상 또는 기타층 1,000㎡ 이상 모든 층`) };
                 }
-                if (totalAreaNum >= 460) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} 수용인원 100명(바닥면적 460㎡) 이상 모든 층`) };
+                const isExcludedFrom460 =
+                    (isCulture && /동물원|식물원|동·식물원/.test(subPurps)) ||
+                    (isReligion && isWoodenStrct) ||
+                    (isSports && /물놀이|수영장|워터파크/.test(subPurps));
+                if (!isExcludedFrom460 && totalAreaNum >= 460) {
+                    const exclNote = isCulture ? ' (동·식물원 제외)' : (isReligion ? ' (주요구조부 목조 제외)' : ' (물놀이형·관람석 없는 운동시설 제외)');
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} 수용인원 100명(바닥면적 460㎡) 이상 모든 층${exclNote}`) };
                 }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
                 }
+                if ((isSports || ymd >= 19840701) && hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = isSports ? '' : "('84.7.1) ";
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                const unmetCRS = (ymd >= 20180128)
+                    ? `${facLabel} ('18.1.28) 6층 이상 또는 수용인원 100명(460㎡) 이상 모든 층`
+                    : `${facLabel} 수용인원 100명(460㎡) 이상 모든 층`;
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetCRS) };
             }
 
-            // 6. 판매시설 (p.8) / 운수시설 (p.9)
+            // 5. 판매시설 (p.8) / 6. 운수시설 (p.9)
             if (isSales || isTransport) {
                 const facLabel = isSales ? '판매시설' : '운수시설';
                 if (ymd >= 20180128 && grndFlr >= 6) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('05.1.1) 층수가 11층 이상일 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
                 }
                 if (totalAreaNum >= 5000) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} 바닥면적 합계 5,000㎡ 이상 모든 층`) };
@@ -14169,35 +14236,153 @@
                 if (totalAreaNum >= 1500) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} 수용인원 500명(1,500㎡) 이상 모든 층`) };
                 }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
                 if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
+                const unmetST = (ymd >= 20180128)
+                    ? `${facLabel} ('18.1.28) 6층 이상 또는 바닥면적 합계 5,000㎡(수용인원 500명·1,500㎡) 이상 모든 층`
+                    : `${facLabel} 바닥면적 합계 5,000㎡(수용인원 500명·1,500㎡) 이상 모든 층`;
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetST) };
             }
 
-            // 7. 교육연구시설 (p.11) / 수련시설 (p.14)
+            // 7. 의료시설 - PDF p.10
+            if (isMedical) {
+                if (isNursingHosp) {
+                    if (totalAreaNum >= 600) {
+                        return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설(요양병원) ('14.7.8 / '18.6.30 소급완료) 바닥면적 합계 600㎡ 이상 모든 층`) };
+                    }
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(요양병원) ('18.6.30 소급완료) 바닥면적 합계 600㎡ 미만 모든 층`) };
+                }
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (isPsych && ymd >= 20040530 && totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설(정신의료기관) ('04.5.30) 바닥면적 합계 600㎡ 이상 모든 층`) };
+                }
+                if (isHospitalLevel && ymd >= 20190806 && totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설(병원급) ('19.8.6) 바닥면적 합계 600㎡ 이상 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`의료시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`의료시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
+                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`의료시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                if (isPsychOrRehab && totalAreaNum >= 300 && totalAreaNum < 600) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(정신의료·재활시설) 바닥면적 합계 300㎡ 이상 600㎡ 미만 모든 층`) };
+                }
+                if (isHospitalLevel && ymd >= 20190806 && totalAreaNum > 0 && totalAreaNum < 600) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(병원급) ('19.8.6) 바닥면적 합계 600㎡ 미만 모든 층`) };
+                }
+                const unmetMed = (ymd >= 20190806)
+                    ? "의료시설 ('19.8.6) 6층 이상 또는 바닥면적 합계 600㎡ 이상 모든 층"
+                    : (ymd >= 20180128 ? "의료시설 ('18.1.28) 6층 이상 모든 층" : (ymd >= 20050101 ? "의료시설 ('05.1.1) 11층 이상 전층" : "의료시설 ('84.7.1) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층"));
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetMed) };
+            }
+
+            // 8. 교육연구시설 (p.11) / 10. 수련시설 (p.14)
             if (isEdu || isTraining) {
                 const facLabel = isEdu ? '교육연구시설' : '수련시설';
                 if (ymd >= 20180128 && grndFlr >= 6) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
                 }
-                if (ymd >= 20040530 && /기숙사/.test(fullContext) && totalAreaNum >= 5000) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel}(기숙사) ('04.5.30) 연면적 5,000㎡ 이상 모든 층`) };
+                if ((isTraining || ymd >= 20040530) && /기숙사/.test(fullContext) && totalAreaNum >= 5000) {
+                    const dtPrefix = isTraining ? '' : "('04.5.30) ";
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel}(기숙사) ${dtPrefix}연면적 5,000㎡ 이상 모든 층`) };
                 }
                 if (isTraining && totalAreaNum >= 600) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`수련시설(숙박 가능) 바닥면적 합계 600㎡ 이상 모든 층`) };
                 }
                 if (ymd >= 20050101 && grndFlr >= 11) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('05.1.1) 층수가 11층 이상인 경우 모든 층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${facLabel} ('05.1.1) 층수가 11층 이상인 경우 전층`) };
                 }
-                if (ymd >= 19920728 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ('92.7.28) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
                 }
-                if (/합숙소/.test(fullContext) && totalAreaNum >= 100) {
+                if (ymd >= 19920728 && grndFlr >= 11 && !isSchool) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층 (학교 제외)`) };
+                }
+                if ((isTraining || ymd >= 19920728) && hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = isTraining ? '' : "('92.7.28) ";
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                if (isEdu && /합숙소/.test(fullContext) && totalAreaNum >= 100) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`교육연구시설 내 합숙소 연면적 100㎡ 이상 모든 층`) };
                 }
+                const unmetET = isTraining
+                    ? (ymd >= 20180128 ? "수련시설 ('18.1.28) 6층 이상 또는 숙박가능 600㎡ 이상 모든 층" : "수련시설 숙박가능 600㎡ 이상 모든 층")
+                    : (ymd >= 20180128 ? "교육연구시설 ('18.1.28) 6층 이상 모든 층" : (ymd >= 20050101 ? "교육연구시설 ('05.1.1) 11층 이상 전층" : "교육연구시설 ('92.7.28) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층"));
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetET) };
             }
 
-            // 8. 숙박시설 - PDF p.17
+            // 9. 노유자시설 - PDF p.12
+            if (isElderlyChild) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (totalAreaNum >= 600) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 바닥면적 합계 600㎡ 이상인 것은 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`노유자시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`노유자시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                if (/노유자생활|요양원|생활시설|거주시설/.test(fullContext)) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`노유자시설(노유자생활시설) ('14.2.4 소급적용) 모든 층`) };
+                }
+                if (totalAreaNum >= 300) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`노유자시설 바닥면적 합계 300㎡ 이상 600㎡ 미만 모든 층`) };
+                }
+                const unmetEld = (ymd >= 20180128)
+                    ? "노유자시설 ('18.1.28) 6층 이상 또는 바닥면적 합계 600㎡ 이상 모든 층"
+                    : "노유자시설 바닥면적 합계 600㎡ 이상 모든 층";
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetEld) };
+            }
+
+            // 12. 업무시설 - PDF p.16 & p.2 연혁
+            if (isOffice) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
+                if (ymd >= 20050101 && totalAreaNum >= 5000 && /오피스텔/.test(rawPurps)) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설(복합·오피스텔) ('05.1.1) 연면적 5,000㎡ 이상 전층`) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`업무시설 ('92.7.28) 11층 이상인 것은 11층 이상인 층`) };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`업무시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                const unmetOff = (ymd >= 20180128)
+                    ? "업무시설 ('18.1.28) 6층 이상 모든 층"
+                    : (ymd >= 20050101 ? "업무시설 ('05.1.1) 11층 이상 전층" : "업무시설 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층");
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetOff) };
+            }
+
+            // 13. 숙박시설 - PDF p.17
             if (isLodging) {
                 if (ymd >= 20180128 && grndFlr >= 6) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`숙박시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
@@ -14208,8 +14393,8 @@
                 if (ymd >= 20050101 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`숙박시설 ('05.1.1) 층수가 11층 이상일 경우 전층`) };
                 }
-                if (ymd >= 19950810 && totalAreaNum >= 5000 && isComplexBld) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`숙박시설/복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층`) };
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`숙박시설/복합건축물 ('95.8.10) 연면적 5,000㎡ 이상은 전층`) };
                 }
                 if (ymd >= 19840701 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`숙박시설 ('84.7.1) 11층 이상 여관·호텔 전층`) };
@@ -14223,44 +14408,113 @@
                 if (ymd >= 20221201 && totalAreaNum >= 300 && totalAreaNum < 600) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`숙박시설 ('22.12.1) 바닥면적의 합계가 300㎡ 이상 600㎡ 미만인 시설`) };
                 }
+                const unmetLodg = (ymd >= 20221201)
+                    ? "숙박시설 ('22.12.1) 6층 이상 또는 바닥면적 합계 600㎡ 이상 모든 층"
+                    : (ymd >= 20180128 ? "숙박시설 ('18.1.28) 6층 이상 모든 층" : (ymd >= 19840701 ? "숙박시설 ('84.7.1) 11층 이상 전층" : "숙박시설 ('81.11.6) 11층 이상 부분"));
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetLodg) };
             }
 
-            // 9. 업무시설 - PDF p.16
-            if (isOffice) {
+            // 16. 창고시설 - PDF p.20
+            if (isWarehouse) {
                 if (ymd >= 20180128 && grndFlr >= 6) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
                 }
                 if (ymd >= 20050101 && grndFlr >= 11) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
-                }
-                if (ymd >= 20050101 && totalAreaNum >= 5000 && (isComplexBld || /오피스텔/.test(rawPurps))) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`업무시설(복합건축물) ('05.1.1) 연면적 5,000㎡ 이상 전층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
                 }
                 if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
                 }
-                if (ymd >= 19920728 && grndFlr >= 11) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`업무시설 ('92.7.28) 11층 이상인 것은 11층 이상인 층`) };
-                }
-                if (hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`업무시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
-                }
-            }
-
-            // 10. 창고시설 (p.20) 및 지하상가 (p.33)
-            if (isUndergroundMall && totalAreaNum >= 1000) {
-                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`지하상가 연면적 1,000㎡ 이상 모든 층`) };
-            }
-            if (isWarehouse) {
                 if (isLogisticsTerminal && totalAreaNum >= 1500) {
-                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설(물류터미널) 바닥면적 합계 1,500㎡ 이상 모든 층`) };
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설(물류터미널) 수용인원 500명(1,500㎡) 이상 모든 층`) };
                 }
                 if (totalAreaNum >= 5000) {
                     return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설 바닥면적 합계 5,000㎡ 이상 모든 층`) };
                 }
+                if (/랙식/.test(fullContext) && totalAreaNum >= 1500 && (heitNum === 0 || heitNum > 10)) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`창고시설(랙식창고) 높이 10m 초과 및 바닥면적 합계 1,500㎡ 이상 모든 층`) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`창고시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`창고시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                const unmetWh = (ymd >= 20180128)
+                    ? "창고시설 ('18.1.28) 6층 이상 또는 바닥면적 합계 5,000㎡ 이상 모든 층"
+                    : "창고시설 바닥면적 합계 5,000㎡ 이상 모든 층";
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetWh) };
             }
 
-            // 11. 기타 모든 특정소방대상물 공통 기준 (주용도가 식별된 경우 해당 주용도 명칭 유지)
+            // 17. 위험물 저장 및 처리 시설 (가스시설 제외) - PDF p.22
+            if (isHazmat && /가스/.test(subPurps)) {
+                return {
+                    isInstalled: false,
+                    type: 'none',
+                    text: '',
+                    detail: makeSpDetail(`위험물 저장 및 처리 시설 중 가스시설 (스프링클러 제외)`)
+                };
+            }
+
+            // 19. 동물 및 식물 관련 시설 (축사는 지하·무창층 1,000㎡ 제외) - PDF p.24
+            if (isAnimal) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`동물 및 식물관련시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`동물 및 식물관련시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`동물 및 식물관련시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
+                const isBarn = /축사/.test(subPurps);
+                if (isBarn ? hasFlr1000InGrnd4Plus : hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`동물 및 식물관련시설 지하층·무창층(축사 제외)·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                const unmetAni = (ymd >= 20180128)
+                    ? "동물 및 식물관련시설 ('18.1.28) 6층 이상 모든 층"
+                    : "동물 및 식물관련시설 지하·무창(축사 제외)·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetAni) };
+            }
+
+            // 21. 교정 및 군사시설 - PDF p.26
+            if (isMilitary) {
+                if (ymd >= 20180128 && grndFlr >= 6) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`교정 및 군사시설 ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
+                }
+                if (ymd >= 20050101 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`교정 및 군사시설 ('05.1.1) 층수가 11층 이상인 경우 전층`) };
+                }
+                if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
+                    return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
+                }
+                if (/보호감호|교도소|구치소|보호관찰|갱생보호|치료감호|소년원|소년분류심사원|출입국보호|유치장/.test(subPurps)) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (수용거실 등)', detail: makeSpDetail(`교정 및 군사시설 수용거실·출입국보호시설·경찰유치장`) };
+                }
+                if (ymd >= 19920728 && grndFlr >= 11) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`교정 및 군사시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
+                }
+                if (hasFlr1000In4PlusOrSub) {
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`교정 및 군사시설 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                }
+                if (/외국인보호실|외국인보호소|기타보호시설/.test(subPurps)) {
+                    return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설치', detail: makeSpDetail(`교정 및 군사시설 외국인보호실·외국인보호소·기타보호시설`) };
+                }
+                const unmetMil = (ymd >= 20180128)
+                    ? "교정 및 군사시설 ('18.1.28) 6층 이상 모든 층"
+                    : "교정 및 군사시설 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
+                return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetMil) };
+            }
+
+            // 23. 발전시설 중 전기저장시설(ESS 20kWh 이상) - PDF p.28~29
+            if (isPower && /전기저장|에너지저장|\bESS\b/i.test(fullContext)) {
+                return { isInstalled: true, type: 'full', text: '스프링클러 설치 (전기저장시설)', detail: makeSpDetail(`발전시설 중 전기저장시설 (ESS 20kWh 이상)`) };
+            }
+
+            // 14~26 기타 특정소방대상물 공통 기준 (위락, 공장, 위험물(가스제외), 항공·자동차, 자원순환, 방송통신, 발전, 묘지, 관광휴게, 장례)
             const primaryCatLabelMap = {
                 apt: '공동주택', lodging: '숙박시설', comm: '근린생활시설', medical: '의료시설',
                 elderly: '노유자시설', culture: '문화 및 집회시설', religion: '종교시설', sports: '운동시설',
@@ -14276,10 +14530,10 @@
                 return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${commonFacLabel} ('18.1.28) 층수가 6층 이상인 경우 모든 층`) };
             }
             if (ymd >= 20050101 && grndFlr >= 11) {
-                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${commonFacLabel} ('05.1.1) 층수가 11층 이상인 경우 모든 층`) };
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`${commonFacLabel} ('05.1.1) 층수가 11층 이상인 경우 전층`) };
             }
             if (ymd >= 19950810 && isComplexBld && totalAreaNum >= 5000) {
-                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(`복합건축물 ('95.8.10) 연면적 5,000㎡ 이상인 것은 전층`) };
+                return { isInstalled: true, type: 'full', text: '스프링클러 전층 설치', detail: makeSpDetail(complexRuleLabel) };
             }
             if (ymd >= 19920728 && grndFlr >= 11) {
                 return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${commonFacLabel} ('92.7.28) 11층 이상인 것은 11층 이상인 층`) };
@@ -14288,58 +14542,9 @@
                 return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${commonFacLabel} 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
             }
 
-            let unmetRuleDesc = (ymd >= 20180128)
-                ? `${commonFacLabel} ('18.1.28) 6층 이상 전층`
+            const unmetRuleDesc = (ymd >= 20180128)
+                ? `${commonFacLabel} ('18.1.28) 6층 이상 모든 층`
                 : (ymd >= 20050101 ? `${commonFacLabel} ('05.1.1) 11층 이상 전층` : `${commonFacLabel} 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층`);
-            if (isAptOrDorm) {
-                if (ymd >= 20180128) unmetRuleDesc = "공동주택 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 20050101) unmetRuleDesc = "공동주택 ('05.1.1) 11층 이상 전층";
-                else unmetRuleDesc = "공동주택 ('90.7.1) 16층 이상 해당 층";
-            } else if (isLodging) {
-                if (ymd >= 20221201) unmetRuleDesc = "숙박시설 ('22.12.1) 6층 이상 또는 바닥면적 합계 600㎡ 이상 전층";
-                else if (ymd >= 20180128) unmetRuleDesc = "숙박시설 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 19840701) unmetRuleDesc = "숙박시설 ('84.7.1) 11층 이상 전층";
-                else unmetRuleDesc = "숙박시설 ('81.11.6) 11층 이상 부분";
-            } else if (isComm) {
-                if (ymd >= 20180128) unmetRuleDesc = "근린생활시설 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 20050101) unmetRuleDesc = "근린생활시설 ('05.1.1) 11층 이상 전층";
-                else unmetRuleDesc = "근린생활시설 ('84.7.1) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
-            } else if (isMedical) {
-                if (ymd >= 20190806) unmetRuleDesc = "의료시설 ('19.8.6) 6층 이상 또는 바닥면적 합계 600㎡ 이상 전층";
-                else if (ymd >= 20180128) unmetRuleDesc = "의료시설 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 20050101) unmetRuleDesc = "의료시설 ('05.1.1) 11층 이상 전층";
-                else unmetRuleDesc = "의료시설 ('84.7.1) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
-            } else if (isElderlyChild) {
-                unmetRuleDesc = (ymd >= 20180128)
-                    ? "노유자시설 ('18.1.28) 6층 이상 또는 바닥면적 합계 600㎡ 이상 전층"
-                    : "노유자시설 바닥면적 합계 600㎡ 이상 전층";
-            } else if (isCulture || isReligion || isSports) {
-                const facLbl = isCulture ? '문화 및 집회시설' : (isReligion ? '종교시설' : '운동시설');
-                unmetRuleDesc = (ymd >= 20180128)
-                    ? `${facLbl} ('18.1.28) 6층 이상 또는 수용인원 100명(460㎡) 이상 전층`
-                    : `${facLbl} 수용인원 100명(460㎡) 이상 전층`;
-            } else if (isSales || isTransport) {
-                const facLbl = isSales ? '판매시설' : '운수시설';
-                unmetRuleDesc = (ymd >= 20180128)
-                    ? `${facLbl} ('18.1.28) 6층 이상 또는 바닥면적 합계 5,000㎡(수용인원 500명) 이상 전층`
-                    : `${facLbl} 바닥면적 합계 5,000㎡(수용인원 500명) 이상 전층`;
-            } else if (isEdu) {
-                if (ymd >= 20180128) unmetRuleDesc = "교육연구시설 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 20050101) unmetRuleDesc = "교육연구시설 ('05.1.1) 11층 이상 전층";
-                else unmetRuleDesc = "교육연구시설 ('92.7.28) 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
-            } else if (isTraining) {
-                unmetRuleDesc = (ymd >= 20180128)
-                    ? "수련시설 ('18.1.28) 6층 이상 또는 숙박가능 600㎡ 이상 전층"
-                    : "수련시설 숙박가능 600㎡ 이상 전층";
-            } else if (isOffice) {
-                if (ymd >= 20180128) unmetRuleDesc = "업무시설 ('18.1.28) 6층 이상 전층";
-                else if (ymd >= 20050101) unmetRuleDesc = "업무시설 ('05.1.1) 11층 이상 전층";
-                else unmetRuleDesc = "업무시설 지하·무창·4층 이상 바닥면적 1,000㎡ 이상 해당 층";
-            } else if (isWarehouse) {
-                unmetRuleDesc = (ymd >= 20180128)
-                    ? "창고시설 ('18.1.28) 6층 이상 또는 바닥면적 합계 5,000㎡ 이상 전층"
-                    : "창고시설 바닥면적 합계 5,000㎡ 이상 전층";
-            }
             return {
                 isInstalled: false,
                 type: 'none',
@@ -15365,6 +15570,7 @@
             const totAreaNum = parseFloat(String(it.totArea || '0').replace(/[^0-9.]/g, '')) || 0;
             const archAreaNum = parseFloat(String(it.archArea || '0').replace(/[^0-9.]/g, '')) || 0;
 
+            const spExtraMeta = { strct, heit: parseFloat(String(it.heit || '0').replace(/[^0-9.]/g, '')) || 0 };
             let lawEval = evaluateSprinklerForFacilityModal(
                 it.mainPurpsCdNm || ledgerType,
                 it.etcPurps || '',
@@ -15374,7 +15580,9 @@
                 effectiveContext,
                 effectiveBldName,
                 ledgerType,
-                archAreaNum
+                archAreaNum,
+                null,
+                spExtraMeta
             );
 
             const applySprinklerCardStyle = (finalText, finalDetail, mode = 'final') => {
@@ -15711,7 +15919,8 @@
                     effectiveBldName,
                     ledgerType,
                     archAreaNum,
-                    filteredFlr
+                    filteredFlr,
+                    spExtraMeta
                 );
                 const finalSpText = filteredFlr.length > 0 ? (refinedLawEval.text || '') : (refinedLawEval.text || lawEval.text || '');
                 const finalSpDetail = filteredFlr.length > 0 ? (refinedLawEval.detail || '') : (refinedLawEval.text ? refinedLawEval.detail : (refinedLawEval.detail || lawEval.detail || ''));
