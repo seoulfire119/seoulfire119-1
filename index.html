@@ -12751,66 +12751,106 @@
                 const mainPurps = (bestItem.mainPurpsCdNm || '').trim();
                 const etcPurps = (bestItem.etcPurps || '').trim();
                 const bldNm = (bestItem.bldNm || '').trim();
+                const grnd = parseInt(bestItem.grndFlrCnt || '0', 10) || 0;
+                const hhldCnt = (parseInt(bestItem.hhldCnt || '0', 10) || 0) + (parseInt(bestItem.hoCnt || '0', 10) || 0);
+                const totArea = parseFloat(String(bestItem.totArea || '0').replace(/[^0-9.]/g, '')) || 0;
+                const purpsPair = `${mainPurps} ${etcPurps}`.trim();
                 const mergedPurps = `${etcPurps} ${mainPurps} ${bldNm} ${dongNm} ${regstrKindNm} ${regstrGbNm}`;
 
-                // -2) 지식산업센터 우선 판별:
-                // 건축물대장 기타용도, 건물명, 주용도가 '공장'이더라도 '지식산업센터'(구 아파트형공장)인 경우 1번 구/동 명칭에 '지식산업센터'로 표기
+                // -2) 지식산업센터 우선 판별
                 if (/지식\s*산업\s*센터|아파트형\s*공장|지산\b/.test(mergedPurps) || /지식\s*산업\s*센터|아파트형\s*공장/.test(combinedContext) || (mainPurps === '공장' && /비즈센터|테크노밸리|IT타워|아이티타워|디지털타워|비즈타워|밸리/.test(`${bldNm} ${etcPurps}`))) {
                     return '지식산업센터';
                 }
 
-                // -1) 도시형생활주택 우선 판별:
-                // 건축물대장 기타용도, 건물명, 주용도 또는 입력 컨텍스트에 '도시형생활주택'이 있는 경우 아파트가 아닌 '도시형생활주택'으로 명시
+                // -1) 도시형생활주택 우선 판별
                 if (/도시형\s*생활\s*주택/.test(mergedPurps) || /도시형\s*생활\s*주택/.test(combinedContext)) {
                     return '도시형생활주택';
                 }
 
-                const hasCommInBld = /근린생활|근생|상가/.test(mergedPurps) || /근린생활|근생/.test(mainPurps) || /근린생활|근생/.test(etcPurps);
-                const hasJointHouseInBld = /공동주택|다세대|연립|아파트/.test(mainPurps) || /공동주택|다세대|연립/.test(etcPurps);
-                const hasSingleHouseInBld = /단독주택|다가구/.test(mainPurps) || /단독주택|다가구/.test(etcPurps) || (/주택/.test(mergedPurps) && !hasJointHouseInBld);
-                const hasHouseInBld = hasJointHouseInBld || hasSingleHouseInBld || /주택|주거/.test(mergedPurps);
+                const hasCommInBld = /근린생활|근생/.test(purpsPair) || (/상가/.test(`${bldNm} ${dongNm} ${etcPurps}`) && !/아파트/.test(bldNm));
+                const hasJointHouseInBld = /공동주택|다세대|연립|아파트/.test(purpsPair);
+                const hasSingleHouseInBld = /단독주택|다가구|다중주택/.test(purpsPair) || (/주택/.test(purpsPair) && !hasJointHouseInBld);
+                const hasHouseInBld = hasJointHouseInBld || hasSingleHouseInBld || /주택|주거/.test(purpsPair);
 
-                // 0-1) 공동주택 + 근린생활시설 복합 용도 (예: J&J빌리지 등 공동주택과 근생시설이 함께 있는 건물) -> '복합건축물' 표기
+                // 0-0) 아파트 단지 내 별도 부속동(단지내 상가, 상가동, 유치원, 어린이집, 노인정, 경로당, 관리동, 도서관 등) 우선 판별
+                if (dongNm && !/아파트/.test(dongNm)) {
+                    const dongCat = detectPdfFacilityCategory(dongNm);
+                    const dongCatToLedger = {
+                        comm: '근생시설', elderly: '노유자시설', edu: '교육연구시설',
+                        sales: '판매시설', office: '업무시설', sports: '운동시설',
+                        culture: '문화및집회시설', religion: '종교시설', medical: '의료시설',
+                        auto: '자동차관련시설', warehouse: '창고시설'
+                    };
+                    if (dongCat && dongCatToLedger[dongCat]) {
+                        return dongCatToLedger[dongCat];
+                    }
+                }
+                if (mainPurps === '공동주택' && etcPurps && !/공동주택|아파트|연립|다세대|주택/.test(etcPurps)) {
+                    const etcCat = detectPdfFacilityCategory(etcPurps);
+                    const etcCatToLedger = {
+                        comm: '근생시설', elderly: '노유자시설', edu: '교육연구시설',
+                        sales: '판매시설', office: '업무시설', sports: '운동시설',
+                        culture: '문화및집회시설', religion: '종교시설', medical: '의료시설',
+                        auto: '자동차관련시설', warehouse: '창고시설'
+                    };
+                    if (etcCat && etcCatToLedger[etcCat]) {
+                        return etcCatToLedger[etcCat];
+                    }
+                }
+
+                // 0-1) 공동주택 + 근린생활시설 복합 용도 -> '복합건축물'
                 if (hasCommInBld && hasJointHouseInBld && !/도시형\s*생활\s*주택/.test(mergedPurps)) {
                     return '복합건축물';
                 }
 
-                // 0-2) 근생시설 + 단독/다가구주택 복합 용도 (상가주택 등 일반건축물) -> '일반건축물' 표기
+                // 0-2) 근생시설 + 단독/다가구주택 복합 용도 (상가주택 등 일반건축물) -> '일반건축물'
                 if (hasCommInBld && hasSingleHouseInBld && !/도시형\s*생활\s*주택|아파트/.test(mergedPurps)) {
                     return '일반건축물';
                 }
 
-                // 0-3) 아파트 보호:
-                // 실제 아파트인 경우에만 1번 구/동 명칭에 '아파트'로 표기 (예: "강서구 아파트")
+                // 0-3) 아파트 vs 빌라·다세대·연립·공동주택 정밀 구분
+                // (5~7층 10~20세대 필로티 빌라가 주용도 '공동주택' 또는 기타용도 '공동주택(아파트)'로 등재되어도 아파트로 오인하지 않도록 보정)
                 const cleanCtxForApt = String(combinedContext || '').replace(/고층건물\s*\([^)]*\)/gi, '').replace(/재난분류[^\n\r]*/gi, '');
-                const isExplicitApt = /아파트/.test(mergedPurps) || /아파트|@/.test(cleanCtxForApt) || /아파트/.test(bldNm) || /아파트/.test(dongNm);
-                if (isExplicitApt && !/빌리지|빌라|다세대|연립/.test(`${bldNm} ${etcPurps}`)) {
+                const hasVillaOrMultiKeyword = /다세대|빌라|빌리지|연립/.test(`${bldNm} ${dongNm} ${etcPurps}`);
+                const hasExplicitAptName = /아파트/.test(`${bldNm} ${dongNm}`) || /아파트|@/.test(cleanCtxForApt);
+                const hasAptInEtcPurps = /아파트/.test(etcPurps);
+                const isSmallScaleVillaLike = (grnd > 0 && grnd <= 8) && (hhldCnt > 0 && hhldCnt < 30);
+
+                if (hasExplicitAptName && !hasVillaOrMultiKeyword && !/다세대|연립/.test(cleanCtxForApt)) {
+                    return '아파트';
+                }
+                if (hasAptInEtcPurps && !hasVillaOrMultiKeyword && !isSmallScaleVillaLike) {
                     return '아파트';
                 }
 
-                // 2) 순수 상가동이거나 순수 근린생활시설 (주택이 없는 순수 상업용 건물)
-                if (/상가동/.test(dongNm) || /상가동/.test(bldNm) || (hasCommInBld && !hasHouseInBld && (!mainPurps || /근린생활|근생/.test(mainPurps)) && !/아파트|공동주택/.test(mergedPurps))) {
+                // 1) 순수 상가동 또는 순수 근린생활시설
+                if (/상가동/.test(dongNm) || /상가동/.test(bldNm) || (hasCommInBld && !hasHouseInBld && (!mainPurps || /근린생활|근생/.test(mainPurps)) && !/아파트|공동주택/.test(purpsPair))) {
                     return '근생시설';
                 }
 
-                // 3) 복합건축물 명시 또는 기타 복수 용도(예: 오피스텔 + 판매/업무 등)인 경우 복합건축물 판별
+                // 2) 복합건축물 명시 또는 복수 용도(오피스텔 + 판매/업무 등)
                 if (/복합\s*건축물|주상\s*복합/.test(mergedPurps)) return '복합건축물';
                 if (etcPurps.includes('오피스텔') && (etcPurps.includes('판매') || etcPurps.includes('업무'))) {
                     return '복합건축물';
                 }
 
-                // 2) 주용도 코드명(mainPurpsCdNm) 기준 1순위 판정 (건축물대장 공적 주용도 우선)
+                // 3) 주용도 코드명(mainPurpsCdNm) 기준 1순위 판정
                 if (mainPurps) {
                     if (mainPurps === '공동주택') {
                         if (hasCommInBld) return '복합건축물';
+                        if (/기숙사/.test(mergedPurps)) return '기숙사';
                         if (/다세대|빌라|빌리지/.test(mergedPurps) || /다세대|빌라|빌리지/.test(cleanCtxForApt)) return '다세대주택';
                         if (/연립/.test(mergedPurps) || /연립/.test(cleanCtxForApt)) return '연립주택';
-                        if (/아파트|@/.test(mergedPurps) || /아파트|@/.test(cleanCtxForApt)) return '아파트';
-                        const grnd = parseInt(bestItem.grndFlrCnt || '0', 10);
-                        return (grnd >= 6) ? '아파트' : '공동주택';
+                        if (hasExplicitAptName) return '아파트';
+                        // 4층 이하 & 연면적 660㎡ 이하 -> 건축법상 다세대주택
+                        if (grnd > 0 && grnd <= 4 && totArea > 0 && totArea <= 660) return '다세대주택';
+                        // 10층 이상이면서 30세대 이상(또는 세대수 미상 10층 이상)인 경우에만 아파트로 추정, 그 외(6층 10세대 빌라 등)는 공동주택
+                        if (grnd >= 10 && (hhldCnt === 0 || hhldCnt >= 30)) return '아파트';
+                        return '공동주택';
                     }
                     if (mainPurps === '단독주택') {
-                        if (/다가구/.test(combinedContext) || /다가구/.test(etcPurps)) return '다가구주택';
+                        if (/다중\s*주택/.test(`${etcPurps} ${combinedContext}`)) return '다중주택';
+                        if (/다가구/.test(`${etcPurps} ${combinedContext}`)) return '다가구주택';
                         return '단독주택';
                     }
                     if (mainPurps.includes('근린생활')) return '근생시설';
@@ -12829,17 +12869,32 @@
                     if (/문화\s*및\s*집회|문화/.test(mainPurps)) return '문화및집회시설';
                     if (mainPurps === '창고시설' || /창고/.test(mainPurps)) return '창고시설';
                     if (mainPurps === '공장') return '공장';
-                    if (mainPurps === '교육연구시설') return '교육연구시설';
+                    if (mainPurps === '교육연구시설' || /교육연구/.test(mainPurps)) return '교육연구시설';
+                    if (/수련시설/.test(mainPurps)) return '수련시설';
+                    if (/위락시설/.test(mainPurps)) return '위락시설';
+                    if (/장례/.test(mainPurps)) return '장례시설';
+                    if (/위험물/.test(mainPurps)) return '위험물시설';
+                    if (/자동차/.test(mainPurps)) return '자동차관련시설';
+                    if (/방송통신/.test(mainPurps)) return '방송통신시설';
+                    if (/발전/.test(mainPurps)) return '발전시설';
+                    if (/관광휴게/.test(mainPurps)) return '관광휴게시설';
+                    if (/동물|식물/.test(mainPurps)) return '동식물관련시설';
+                    if (/자원순환/.test(mainPurps)) return '자원순환시설';
+                    if (/교정|군사/.test(mainPurps)) return '교정및군사시설';
+                    if (/묘지/.test(mainPurps)) return '묘지관련시설';
                     return mainPurps;
                 }
 
-                // 3) 주용도가 비어있거나 불명확할 때 키워드 세부 판정
+                // 4) 주용도가 비어있거나 불명확할 때 키워드 세부 판정
                 if (/오피스텔/.test(mergedPurps)) return '오피스텔';
+                if (/다중\s*주택/.test(mergedPurps)) return '다중주택';
                 if (/다가구\s*주택|다가구/.test(mergedPurps)) return '다가구주택';
-                if (/아파트/.test(mergedPurps)) return '아파트';
-                if (/다세대\s*주택|다세대|빌라/.test(mergedPurps)) return '다세대주택';
+                if (/기숙사/.test(mergedPurps)) return '기숙사';
+                if (/다세대\s*주택|다세대|빌라|빌리지/.test(mergedPurps)) return '다세대주택';
                 if (/연립\s*주택|연립/.test(mergedPurps)) return '연립주택';
-                if (/근린생활시설|근생시설|제1종근린생활|제2종근린생활/.test(mergedPurps)) return '근생시설';
+                if (/아파트/.test(mergedPurps)) return isSmallScaleVillaLike ? '공동주택' : '아파트';
+                if (/공동주택/.test(mergedPurps)) return '공동주택';
+                if (/동물병원|근린생활시설|근생시설|제1종근린생활|제2종근린생활|단지내\s*상가|상가동?|휴게음식점|일반음식점|산후조리원|조산원|고시원|독서실|체력단련장|목욕장|세탁소|미용원|이용원|소매점|슈퍼마켓/.test(mergedPurps)) return '근생시설';
                 if (/단독\s*주택/.test(mergedPurps)) return '단독주택';
                 if (/종교|교회|성당|사찰|기도원/.test(mergedPurps)) return '종교시설';
                 if (/요양병원/.test(mergedPurps)) return '요양병원';
@@ -12859,7 +12914,7 @@
                 if (/위험물/.test(mergedPurps)) return '위험물시설';
                 if (/지하상가/.test(mergedPurps)) return '지하상가';
 
-                // 4) 대장종류 코드명(regstrKindCdNm) 또는 대장구분명(regstrGbCdNm) 활용
+                // 5) 대장종류 코드명(regstrKindCdNm) 또는 대장구분명(regstrGbCdNm) 활용
                 if (regstrKindNm) {
                     if (regstrKindNm.includes('일반건축물')) return '일반건축물';
                     if (regstrKindNm.includes('집합건축물') || regstrGbNm === '집합') return '복합건축물';
@@ -12875,13 +12930,15 @@
             // 컨텍스트 보조 판별 (bestItem이 없을 때)
             if (/지식\s*산업\s*센터|아파트형\s*공장/.test(combinedContext)) return '지식산업센터';
             if (/도시형\s*생활\s*주택/.test(combinedContext)) return '도시형생활주택';
-            if (/근린생활|근생|상가/.test(combinedContext) && /주택|단독|다가구/.test(combinedContext) && !/아파트|공동주택|도시형/.test(combinedContext)) return '일반건축물';
-            if (/단독\s*주택|일반화재\s*\(주택\)|주택/.test(combinedContext) && !/아파트|공동주택|오피스텔/.test(combinedContext)) return '단독주택';
-            if (/아파트/.test(combinedContext)) return '아파트';
-            if (/다세대|빌라/.test(combinedContext)) return '다세대주택';
-            if (/연립/.test(combinedContext)) return '연립주택';
-            if (/오피스텔/.test(combinedContext)) return '오피스텔';
+            if (/근린생활|근생|상가/.test(combinedContext) && /주택|단독|다가구|다중/.test(combinedContext) && !/아파트|공동주택|도시형/.test(combinedContext)) return '일반건축물';
+            if (/다중\s*주택/.test(combinedContext)) return '다중주택';
             if (/다가구/.test(combinedContext)) return '다가구주택';
+            if (/단독\s*주택|일반화재\s*\(주택\)|주택/.test(combinedContext) && !/아파트|공동주택|다세대|연립|오피스텔/.test(combinedContext)) return '단독주택';
+            if (/다세대|빌라|빌리지/.test(combinedContext)) return '다세대주택';
+            if (/연립/.test(combinedContext)) return '연립주택';
+            if (/아파트/.test(combinedContext)) return '아파트';
+            if (/공동주택/.test(combinedContext)) return '공동주택';
+            if (/오피스텔/.test(combinedContext)) return '오피스텔';
             if (/종교|교회|성당|사찰|기도원/.test(combinedContext)) return '종교시설';
             if (/요양병원/.test(combinedContext)) return '요양병원';
             if (/의료시설|병원|치과병원|한방병원|한의원|의원/.test(combinedContext.replace(/임시\s*의료소/g, ''))) return '의료시설';
@@ -13899,6 +13956,71 @@
 
         // 안전지도 텍스트 및 주소에서 아파트/건물 타겟 동 번호(예: 112동, 제112동 -> 112) 정밀 추출 (법정동인 '대치동' 등과 엄격 분리)
 
+        // 첨부파일(스프링클러 설비.pdf 1~33쪽) 세부 용도 기반 시설 분류 헬퍼
+        function detectPdfFacilityCategory(str) {
+            const s = String(str || '').trim();
+            if (!s) return '';
+            // 동물병원은 의료시설(병원)보다 먼저 근린생활시설(PDF p.5 차목)로 분류
+            if (/동물병원/.test(s)) return 'comm';
+            if (/공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(s)) return 'apt';
+            if (/숙박시설|관광호텔|호텔|여관|모텔|여인숙|호스텔|휴양콘도|콘도|생활숙박/.test(s)) return 'lodging';
+            if (/노유자|유치원|어린이집|보육시설|노인정|경로당|노인복지|양로시설|요양원|노인요양|주야간보호|재가노인|아동복지|지역아동센터|아동센터|장애인|사회복지|노숙인|정신재활/.test(s)) return 'elderly';
+            if (/근린생활|제1종근린|제2종근린|근생|단지내\s*상가|상가동?|점포|슈퍼마켓|소매점|휴게음식점|일반음식점|음식점|식당|제과점|베이커리|기원|노래연습장|이용원|미용원|미용실|목욕장|목욕탕|사우나|세탁소|치과의원|한의원|의원|침술원|접골원|조산원|산후조리원|안마원|안마시술소|탁구장|테니스장|체육도장|체력단련장|헬스장|피트니스|에어로빅장|볼링장|당구장|실내낚시터|골프연습장|금융업소|부동산중개|부동산|출판사|서점|제조업소|수리점|게임제공|PC방|피시방|사진관|표구점|독서실|고시원|장의사|총포판매|의약품판매|의료기기판매|자동차영업소|약국|편의점|카페|커피/.test(s)) return 'comm';
+            if (/의료시설|종합병원|요양병원|치과병원|한방병원|정신의료|정신병원|격리병원|전염병원|의료재활|재활시설|병원/.test(s)) return 'medical';
+            if (/문화\s*및\s*집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장|동물원|식물원|견본주택/.test(s)) return 'culture';
+            if (/종교시설|종교집회장|종교|교회|성당|사찰|기도원|봉안당/.test(s)) return 'religion';
+            if (/운동시설|체육관|운동장|수영장|스케이트장|승마장|사격장|골프장/.test(s)) return 'sports';
+            if (/판매시설|판매|도매시장|소매시장|전통시장|대규모점포|백화점|쇼핑센터|대형마트|마트|시장|상점/.test(s)) return 'sales';
+            if (/운수시설|여객자동차|터미널|철도시설|도시철도|지하역사|공항시설|항만시설/.test(s)) return 'transport';
+            if (/교육연구|학교|교육원|연수원|직업훈련소|학원|연구소|시험소|도서관|작은도서관|문고/.test(s)) return 'edu';
+            if (/수련시설|생활권수련|자연권수련|청소년수련|수련관|수련원|야영장|유스호스텔/.test(s)) return 'training';
+            if (/업무시설|오피스텔|공공업무|청사|외국공관|주민자치센터|동사무소|주민센터|경찰서|지구대|파출소|소방서|119안전센터|우체국|보건소|마을회관|관리사무소|관리동|사무소|오피스/.test(s)) return 'office';
+            if (/창고시설|창고|하역장|물류터미널|집배송/.test(s)) return 'warehouse';
+            if (/위락시설|단란주점|유흥주점|유원시설|무도장|무도학원|카지노/.test(s)) return 'amusement';
+            if (/공장/.test(s)) return 'factory';
+            if (/자동차관련|항공기|격납고|주차장|주차타워|주차용|기계식주차|차고|세차장|폐차장|자동차검사|자동차매매|정비공장|운전학원|정비학원/.test(s)) return 'auto';
+            if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
+            if (/위험물|주유소|가스시설|충전소/.test(s)) return 'hazmat';
+            if (/방송통신|방송국|전신전화국|촬영소|데이터센터/.test(s)) return 'broadcast';
+            if (/발전시설|발전소|전기저장|집단에너지/.test(s)) return 'power';
+            if (/관광휴게|야외음악당|야외극장|어린이회관|관망탑|휴게소/.test(s)) return 'tourism';
+            if (/장례시설|장례식장/.test(s)) return 'funeral';
+            if (/동물\s*및\s*식물|동식물|축사|가축시설|도축장|도계장|작물재배|종묘배양/.test(s)) return 'animal';
+            if (/자원순환|분뇨|쓰레기|하수처리|고물상|폐기물/.test(s)) return 'recycle';
+            if (/교정\s*및\s*군사|군사시설|국방|보호감호|교도소|구치소|보호관찰|갱생보호|치료감호|소년원|출입국보호|유치장/.test(s)) return 'military';
+            if (/묘지관련|화장시설|납골시설/.test(s)) return 'cemetery';
+            return '';
+        }
+
+        // 아파트 단지 내 별도 동(단지내 상가, 유치원, 어린이집, 노인정, 경로당, 관리동, 도서관 등) 실제 용도 보정
+        function resolveAptComplexDongOverride(primaryCat, dongNm, etcPurps, ledgerType, flrUsageStrings, flrItems) {
+            if (primaryCat !== 'apt') return primaryCat;
+            const dongOnly = String(dongNm || '').trim();
+            const etcOnly = String(etcPurps || '').trim();
+            const hasAptFlr = /공동주택|아파트|연립|다세대/.test(flrUsageStrings || '');
+            // 1) 동명칭 자체에 별도 시설 용도가 명시된 경우 (예: 단지내 상가, 상가, 상가동, 유치원, 어린이집, 노인정, 경로당, 관리동, 작은도서관 등)
+            if (dongOnly && !/아파트/.test(dongOnly)) {
+                const dongCat = detectPdfFacilityCategory(dongOnly);
+                if (dongCat && dongCat !== 'apt') return dongCat;
+            }
+            // 2) 대장유형(resolveBuildingLedgerType 결과)이 근생시설/노유자시설 등 비주거 별도동으로 이미 판정된 경우
+            if (ledgerType) {
+                const ltCat = detectPdfFacilityCategory(ledgerType);
+                if (ltCat && ltCat !== 'apt' && ltCat !== 'detached') return ltCat;
+            }
+            // 3) 기타용도에 아파트/주택 언급 없이 별도 시설 용도만 명시된 경우 (예: etcPurps='노인정', '유치원', '근린생활시설')
+            if (etcOnly && !/공동주택|아파트|연립|다세대|주택/.test(etcOnly)) {
+                const etcCat = detectPdfFacilityCategory(etcOnly);
+                if (etcCat && etcCat !== 'apt') return etcCat;
+            }
+            // 4) 층별현황에 주거(아파트) 층이 전혀 없고 특정 비주거 용도만 존재하는 경우
+            if (Array.isArray(flrItems) && flrItems.length > 0 && !hasAptFlr && flrUsageStrings) {
+                const flrCat = detectPdfFacilityCategory(flrUsageStrings);
+                if (flrCat && flrCat !== 'apt' && flrCat !== 'auto') return flrCat;
+            }
+            return primaryCat;
+        }
+
         function evaluateSprinklerForFacilityModal(mainPurpsCdNm, etcPurps, useAprDay, grndFlrCnt, totArea, combinedContext, bldNameHint, ledgerType, archArea = 0, flrItems = null, extraMeta = null) {
             let ymd = parseInt(String(useAprDay || '').replace(/\D/g, '').substring(0, 8), 10) || 0;
             const isUnknownDate = (ymd < 19000101);
@@ -13978,51 +14100,30 @@
             const primaryPurpsStr = String(mainPurpsCdNm || '').trim();
             const etcPurpsStr = String(etcPurps || '').trim();
             const ledgerTypeStr = String(ledgerType || '').trim();
-            const subPurps = `${primaryPurpsStr} ${etcPurpsStr} ${flrUsageStrings}`.trim();
+            const dongNmFromMeta = String((extraMeta && extraMeta.dongNm) || '').trim();
+            const subPurps = `${primaryPurpsStr} ${etcPurpsStr} ${dongNmFromMeta} ${flrUsageStrings}`.trim();
             const rawPurps = `${primaryPurpsStr} ${etcPurpsStr} ${ledgerTypeStr} ${flrUsageStrings}`.trim();
             const fullContext = `${subPurps} ${bldNameHint || ''}`.trim();
 
             // 건축물대장 표제부 '주용도(mainPurpsCdNm)' 최우선 단일 분류
             // (부속층 용도나 단지 전체 건물명 '워커힐호텔' 등이 주용도인 숙박시설·근린생활시설을 덮어쓰지 않도록 차단)
-            const detectPrimaryCategory = (str) => {
-                const s = String(str || '').trim();
-                if (!s) return '';
-                if (/공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(s)) return 'apt';
-                if (/숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도|생활숙박/.test(s)) return 'lodging';
-                if (/근린생활|제1종근린|제2종근린|근생|휴게음식점|일반음식점/.test(s)) return 'comm';
-                if (/의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(s)) return 'medical';
-                if (/노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(s)) return 'elderly';
-                if (/문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장|동물원|식물원/.test(s)) return 'culture';
-                if (/종교시설|종교|교회|성당|사찰/.test(s)) return 'religion';
-                if (/운동시설|체육관|운동장/.test(s)) return 'sports';
-                if (/판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(s)) return 'sales';
-                if (/운수시설|여객자동차|철도시설|공항시설|항만시설/.test(s)) return 'transport';
-                if (/교육연구|학교|교육원|직업훈련소|학원|연구소|도서관/.test(s)) return 'edu';
-                if (/수련시설|생활권수련|자연권수련|유스호스텔/.test(s)) return 'training';
-                if (/업무시설|오피스텔|청사|사무소|오피스/.test(s)) return 'office';
-                if (/창고시설|창고|하역장|물류터미널|집배송/.test(s)) return 'warehouse';
-                if (/위락시설|단란주점|유흥주점|무도장|무도학원|카지노/.test(s)) return 'amusement';
-                if (/공장/.test(s)) return 'factory';
-                if (/자동차관련|주차장|주차타워|주차용|차고|세차장|정비공장/.test(s)) return 'auto';
-                if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
-                if (/위험물/.test(s)) return 'hazmat';
-                if (/방송통신/.test(s)) return 'broadcast';
-                if (/발전시설|전기저장/.test(s)) return 'power';
-                if (/관광휴게/.test(s)) return 'tourism';
-                if (/장례시설|장례식장/.test(s)) return 'funeral';
-                if (/동물 및 식물|동식물|축사/.test(s)) return 'animal';
-                if (/자원순환|분뇨|쓰레기/.test(s)) return 'recycle';
-                if (/교정 및 군사|군사시설|교도소|구치소|소년원|유치장/.test(s)) return 'military';
-                if (/묘지관련/.test(s)) return 'cemetery';
-                return '';
-            };
-
+            const detectPrimaryCategory = detectPdfFacilityCategory;
+            const dongNmMeta = String((extraMeta && extraMeta.dongNm) || '').trim();
             const hasExplicitMainPurps = Boolean(primaryPurpsStr || etcPurpsStr);
-            const primaryCat =
+            let primaryCat =
                 detectPrimaryCategory(primaryPurpsStr) ||
                 detectPrimaryCategory(etcPurpsStr) ||
                 detectPrimaryCategory(ledgerTypeStr) ||
                 (hasExplicitMainPurps ? '' : detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`));
+
+            primaryCat = resolveAptComplexDongOverride(
+                primaryCat,
+                dongNmMeta || combinedContext,
+                etcPurpsStr,
+                ledgerTypeStr,
+                flrUsageStrings,
+                flrItems
+            );
 
             // 복합건축물 판별 (소방시설법 시행령 별표2: 1개 건축물에 2개 이상 주된 특정소방대상물 용도 혼재)
             // 부속용도(주차장·기계실·전기실·관리사무소·경비실·계단실·주민공동시설·경로당 등)는 복합 용도 산정에서 제외
@@ -14131,7 +14232,11 @@
                 if (ymd >= 19900701 && grndFlr >= 16) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 16층 이상 설치', detail: makeSpDetail(`공동주택 ('90.7.1) 16층 이상인 것은 16층 이상인 층`) };
                 }
-                if (hasFlr1000In4PlusOrSub) {
+                // 아파트는 지하층(지하주차장 등)만 1,000㎡ 이상이고 지상 주거층이 1,000㎡ 미만인 경우
+                // 92년 바닥면적 기준 대신 90년 16층 이상 기준으로 판별 (지상 4층 이상 주거층이 1,000㎡ 이상일 때만 해당 층 적용)
+                const isAptType = isAptOrDorm && !isRowOrMultiHouse && !/기숙사/.test(rawPurps);
+                const aptFlr1000Matched = isAptType ? hasFlr1000InGrnd4Plus : hasFlr1000In4PlusOrSub;
+                if (aptFlr1000Matched) {
                     const dtPrefix = (ymd >= 19920728) ? "('92.7.28) " : '';
                     return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`공동주택 ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
@@ -14140,7 +14245,7 @@
                 }
                 const unmetApt = (ymd >= 20180128)
                     ? "공동주택 ('18.1.28) 6층 이상 모든 층"
-                    : (ymd >= 20050101 ? "공동주택 ('05.1.1) 11층 이상 전층" : "공동주택 ('90.7.1) 16층 이상 해당 층");
+                    : (ymd >= 20050101 ? "공동주택 ('05.1.1) 11층 이상 전층" : "공동주택 ('90.7.1) 16층 이상인 것은 16층 이상인 층");
                 return { isInstalled: false, type: 'none', text: '', detail: makeSpDetail(unmetApt) };
             }
 
@@ -14645,48 +14750,25 @@
             const primaryPurpsStr = String(it.mainPurpsCdNm || '').trim();
             const etcPurpsStr = String(it.etcPurps || '').trim();
             const ledgerTypeStr = String(ledgerType || '').trim();
-            const subPurps = `${primaryPurpsStr} ${etcPurpsStr} ${flrUsageStrings}`.trim();
+            const subPurps = `${primaryPurpsStr} ${etcPurpsStr} ${it.dongNm || ''} ${flrUsageStrings}`.trim();
             const fullCtx = `${subPurps} ${bldNameHint || ''} ${it.bldNm || ''} ${combinedContext || ''}`.trim();
 
-            const detectPrimaryCategory = (str) => {
-                const s = String(str || '').trim();
-                if (!s) return '';
-                if (/공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(s)) return 'apt';
-                if (/숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도|생활숙박/.test(s)) return 'lodging';
-                if (/근린생활|제1종근린|제2종근린|근생|휴게음식점|일반음식점/.test(s)) return 'comm';
-                if (/의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(s)) return 'medical';
-                if (/노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(s)) return 'elderly';
-                if (/문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장|동물원|식물원/.test(s)) return 'culture';
-                if (/종교시설|종교|교회|성당|사찰/.test(s)) return 'religion';
-                if (/운동시설|체육관|운동장/.test(s)) return 'sports';
-                if (/판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(s)) return 'sales';
-                if (/운수시설|여객자동차|철도시설|공항시설|항만시설/.test(s)) return 'transport';
-                if (/교육연구|학교|교육원|직업훈련소|학원|연구소|도서관/.test(s)) return 'edu';
-                if (/수련시설|생활권수련|자연권수련|유스호스텔/.test(s)) return 'training';
-                if (/업무시설|오피스텔|청사|사무소|오피스/.test(s)) return 'office';
-                if (/창고시설|창고|하역장|물류터미널|집배송/.test(s)) return 'warehouse';
-                if (/위락시설|단란주점|유흥주점|무도장|무도학원|카지노/.test(s)) return 'amusement';
-                if (/공장/.test(s)) return 'factory';
-                if (/자동차관련|주차장|주차타워|주차용|차고|세차장|정비공장/.test(s)) return 'auto';
-                if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
-                if (/위험물/.test(s)) return 'hazmat';
-                if (/방송통신/.test(s)) return 'broadcast';
-                if (/발전시설|전기저장/.test(s)) return 'power';
-                if (/관광휴게/.test(s)) return 'tourism';
-                if (/장례시설|장례식장/.test(s)) return 'funeral';
-                if (/동물 및 식물|동식물|축사/.test(s)) return 'animal';
-                if (/자원순환|분뇨|쓰레기/.test(s)) return 'recycle';
-                if (/교정 및 군사|군사시설|교도소|구치소|소년원|유치장/.test(s)) return 'military';
-                if (/묘지관련/.test(s)) return 'cemetery';
-                return '';
-            };
-
+            const detectPrimaryCategory = detectPdfFacilityCategory;
             const hasExplicitMainPurps = Boolean(primaryPurpsStr || etcPurpsStr);
-            const primaryCat =
+            let primaryCat =
                 detectPrimaryCategory(primaryPurpsStr) ||
                 detectPrimaryCategory(etcPurpsStr) ||
                 detectPrimaryCategory(ledgerTypeStr) ||
                 (hasExplicitMainPurps ? '' : detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`));
+
+            primaryCat = resolveAptComplexDongOverride(
+                primaryCat,
+                it.dongNm || '',
+                etcPurpsStr,
+                ledgerTypeStr,
+                flrUsageStrings,
+                flrItems
+            );
 
             // 단독주택(다가구·다중주택 포함)은 특정소방대상물 미해당
             if (primaryCat === 'detached') {
@@ -15723,7 +15805,7 @@
             const totAreaNum = parseFloat(String(it.totArea || '0').replace(/[^0-9.]/g, '')) || 0;
             const archAreaNum = parseFloat(String(it.archArea || '0').replace(/[^0-9.]/g, '')) || 0;
 
-            const spExtraMeta = { strct, heit: parseFloat(String(it.heit || '0').replace(/[^0-9.]/g, '')) || 0 };
+            const spExtraMeta = { strct, heit: parseFloat(String(it.heit || '0').replace(/[^0-9.]/g, '')) || 0, dongNm };
             let lawEval = evaluateSprinklerForFacilityModal(
                 it.mainPurpsCdNm || ledgerType,
                 it.etcPurps || '',
