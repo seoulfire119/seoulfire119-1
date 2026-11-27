@@ -12250,7 +12250,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 전층 설치',
-                        detail: '[적용기준: 업무시설 (`18.1.28) 층수가 6층 이상인 경우 모든 층]'
+                        detail: '[적용기준: (`18.1.28) 업무시설 층수가 6층 이상인 경우 모든 층]'
                     };
                 }
                 if (ymd >= 20050101 && grndFlr >= 11) {
@@ -12258,7 +12258,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 전층 설치',
-                        detail: '[적용기준: 업무시설 (`05.1.1) 층수가 11층 이상인 경우 전층]'
+                        detail: '[적용기준: (`05.1.1) 업무시설 층수가 11층 이상인 경우 전층]'
                     };
                 }
                 if (grndFlr >= 6) {
@@ -12266,7 +12266,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 전층 설치',
-                        detail: '[적용기준: 업무시설 (`18.1.28) 층수가 6층 이상인 경우 모든 층]'
+                        detail: '[적용기준: (`18.1.28) 업무시설 층수가 6층 이상인 경우 모든 층]'
                     };
                 }
                 if (grndFlr >= 4 && floorArea >= 1000) {
@@ -12288,7 +12288,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 전층 설치',
-                        detail: `[적용기준: ${targetLabel} (\`18.1.28) 층수가 6층 이상인 경우 모든 층]`
+                        detail: `[적용기준: (\`18.1.28) ${targetLabel} 층수가 6층 이상인 경우 모든 층]`
                     };
                 }
                 if (ymd >= 20050101 && ymd <= 20180126 && grndFlr >= 11) {
@@ -12296,7 +12296,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 전층 설치',
-                        detail: `[적용기준: ${targetLabel} (\`05.1.1) 층수가 11층 이상인 경우 전층]`
+                        detail: `[적용기준: (\`05.1.1) ${targetLabel} 층수가 11층 이상인 경우 전층]`
                     };
                 }
                 if (ymd >= 19900701 && ymd <= 20041231 && grndFlr >= 16) {
@@ -12304,7 +12304,7 @@
                         isInstalled: true,
                         type: 'regular',
                         text: '스프링클러 16층 이상 설치',
-                        detail: `[적용기준: ${targetLabel} (\`90.7.1) 16층 이상인 것은 16층 이상의 층]`
+                        detail: `[적용기준: (\`90.7.1) ${targetLabel} 16층 이상인 것은 16층 이상의 층]`
                     };
                 }
                 return { isInstalled: false, type: 'none', text: '', detail: `${targetLabel} - 준공일 또는 층수 기준 미달로 설치 의무 제외` };
@@ -12317,7 +12317,7 @@
                         isInstalled: true,
                         type: 'simple',
                         text: '간이 스프링클러 설치',
-                        detail: '[적용기준: 공동주택(연립·다세대) (`24.12.1) 주택전용 간이스프링클러 의무]'
+                        detail: '[적용기준: (`24.12.1) 공동주택(연립·다세대) 주택전용 간이스프링클러 의무]'
                     };
                 }
                 return { isInstalled: false, type: 'none', text: '', detail: '연립·다세대·빌라 - 설치 의무 제외' };
@@ -14108,7 +14108,16 @@
             const archAreaNum = parseFloat(archArea) || 0;
             const strctStr = String((extraMeta && extraMeta.strct) || '').trim();
             const heitNum = parseFloat((extraMeta && extraMeta.heit) || '0') || 0;
-            const makeSpDetail = (ruleDesc) => `적용기준: ${ruleDesc}${dateNote}`;
+            const makeSpDetail = (ruleDesc) => {
+                const rawDesc = String(ruleDesc || '').trim();
+                const dateMatch = rawDesc.match(/\(\s*['`’]\d{2}\.\d{1,2}(?:\.\d{1,2})?[^)]*\)/);
+                if (dateMatch && dateMatch.index > 0) {
+                    const dtToken = dateMatch[0].trim();
+                    const rest = `${rawDesc.slice(0, dateMatch.index)} ${rawDesc.slice(dateMatch.index + dateMatch[0].length)}`.replace(/\s{2,}/g, ' ').trim();
+                    return `적용기준: ${dtToken} ${rest}${dateNote}`;
+                }
+                return `적용기준: ${rawDesc}${dateNote}`;
+            };
 
             // 층별현황(flrItems) 기반 정밀 바닥면적(동일 층 분할행 합산) 및 층별 용도 분석
             let flrUsageStrings = '';
@@ -14891,10 +14900,23 @@
                 { key: 'activity', icon: '🚒', title: '소화활동설비', items: [] },
                 { key: 'arch', icon: '🏗️', title: '건축·방염 및 기타', items: [] }
             ];
+            const normalizeFireFacReasonDateFirst = (text) => {
+                const hoistOne = (seg) => {
+                    const s = String(seg || '').trim();
+                    const m = s.match(/\(\s*['`’]\d{2}\.\d{1,2}(?:\.\d{1,2})?[^)]*\)/);
+                    if (m && m.index > 0) {
+                        const dt = m[0].trim();
+                        const rest = `${s.slice(0, m.index)} ${s.slice(m.index + m[0].length)}`.replace(/\s{2,}/g, ' ').trim();
+                        return `${dt} ${rest}`.trim();
+                    }
+                    return s;
+                };
+                return String(text || '').split(' / ').map(hoistOne).join(' / ');
+            };
             const addItem = (gKey, name, reason) => {
                 const g = groups.find(x => x.key === gKey);
                 if (g && !g.items.some(x => x.name === name)) {
-                    g.items.push({ name, reason });
+                    g.items.push({ name, reason: normalizeFireFacReasonDateFirst(reason) });
                 }
             };
 
@@ -14923,7 +14945,9 @@
             }
             if (spEval && spEval.text) {
                 const spLabel = spEval.text.includes('간이') ? '간이스프링클러설비' : '스프링클러설비';
-                addItem('extinguish', spLabel, `${spEval.text} ${spEval.detail || ''}`.trim());
+                const spDetailBody = String(spEval.detail || '').replace(/^적용기준:\s*/, '').trim();
+                const spCombined = spDetailBody ? `${spDetailBody} · ${spEval.text}` : spEval.text;
+                addItem('extinguish', spLabel, spCombined);
             }
             if (!isGasFacility) {
                 if (parkingAreaSum >= 200 || (isAuto && totArea >= 800)) {
