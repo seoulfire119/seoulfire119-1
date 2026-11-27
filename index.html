@@ -14131,8 +14131,9 @@
                 if (ymd >= 19900701 && grndFlr >= 16) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 16층 이상 설치', detail: makeSpDetail(`공동주택 ('90.7.1) 16층 이상인 것은 16층 이상인 층`) };
                 }
-                if (ymd >= 19920728 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`공동주택 ('92.7.28) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (ymd >= 19920728) ? "('92.7.28) " : '';
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`공동주택 ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 if (ymd >= 20241201 && isRowOrMultiHouse) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 설비 설치', detail: makeSpDetail(`공동주택 ('24.12.1) 연립주택 및 다세대주택 (주택전용 간이스프링클러설비)`) };
@@ -14160,8 +14161,9 @@
                 if (ymd >= 19920728 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`근린생활시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
                 }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`근린생활시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (ymd >= 19840701) ? "('84.7.1) " : '';
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`근린생활시설 ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 const effectiveCommArea = commAreaSum > 0 ? Math.max(commAreaSum, totalAreaNum) : totalAreaNum;
                 if (ymd >= 20040530 && effectiveCommArea >= 1000) {
@@ -14208,8 +14210,8 @@
                 if (ymd >= 19920728 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
                 }
-                if ((isSports || ymd >= 19840701) && hasFlr1000In4PlusOrSub) {
-                    const dtPrefix = isSports ? '' : "('84.7.1) ";
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (!isSports && ymd >= 19840701) ? "('84.7.1) " : '';
                     return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 const unmetCRS = (ymd >= 20180128)
@@ -14239,8 +14241,9 @@
                 if (ymd >= 19920728 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
                 }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (ymd >= 19840701) ? "('84.7.1) " : '';
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 const unmetST = (ymd >= 20180128)
                     ? `${facLabel} ('18.1.28) 6층 이상 또는 바닥면적 합계 5,000㎡(수용인원 500명·1,500㎡) 이상 모든 층`
@@ -14274,8 +14277,9 @@
                 if (ymd >= 19920728 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`의료시설 ('92.7.28) 11층 이상인 것은 11층 이상의 층`) };
                 }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`의료시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (ymd >= 19840701) ? "('84.7.1) " : '';
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`의료시설 ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 if (isPsychOrRehab && totalAreaNum >= 300 && totalAreaNum < 600) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`의료시설(정신의료·재활시설) 바닥면적 합계 300㎡ 이상 600㎡ 미만 모든 층`) };
@@ -14311,8 +14315,8 @@
                 if (ymd >= 19920728 && grndFlr >= 11 && !isSchool) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`${facLabel} ('92.7.28) 11층 이상인 것은 11층 이상의 층 (학교 제외)`) };
                 }
-                if ((isTraining || ymd >= 19920728) && hasFlr1000In4PlusOrSub) {
-                    const dtPrefix = isTraining ? '' : "('92.7.28) ";
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (!isTraining && ymd >= 19920728) ? "('92.7.28) " : '';
                     return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`${facLabel} ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 if (isEdu && /합숙소/.test(fullContext) && totalAreaNum >= 100) {
@@ -14402,8 +14406,9 @@
                 if (ymd >= 19811106 && grndFlr >= 11) {
                     return { isInstalled: true, type: 'partial', text: '스프링클러 11층 이상 설치', detail: makeSpDetail(`숙박시설 ('81.11.6) 11층 이상 여관·호텔 11층 이상 부분`) };
                 }
-                if (ymd >= 19840701 && hasFlr1000In4PlusOrSub) {
-                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`숙박시설 ('84.7.1) 지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
+                if (hasFlr1000In4PlusOrSub) {
+                    const dtPrefix = (ymd >= 19840701) ? "('84.7.1) " : '';
+                    return { isInstalled: true, type: 'partial', text: '스프링클러 설치 (해당 층)', detail: makeSpDetail(`숙박시설 ${dtPrefix}지하층·무창층·4층 이상인 층이 바닥면적 1,000㎡ 이상인 경우 해당 층`) };
                 }
                 if (ymd >= 20221201 && totalAreaNum >= 300 && totalAreaNum < 600) {
                     return { isInstalled: true, type: 'simple', text: '간이 스프링클러 전층 설치', detail: makeSpDetail(`숙박시설 ('22.12.1) 바닥면적의 합계가 300㎡ 이상 600㎡ 미만인 시설`) };
@@ -14568,16 +14573,19 @@
             const isUnknownDate = (ymd < 19000101);
             if (isUnknownDate) ymd = 20260101;
 
-            // 층별현황 집계
+            // 층별현황 집계 (동일 층 분할행 면적 합산)
             let flrUsageStrings = '';
             let subAreaSum = 0;
             let maxSubArea = 0;
+            let maxGrnd4PlusArea = 0;
             let maxFlr4PlusOrSubArea = 0;
             let flr12AreaSum = 0;
             let flr11PlusAreaSum = 0;
             let hasParkingSub = false;
+            let subParkingAreaSum = 0;
             let parkingAreaSum = 0;
             let elecRoomAreaSum = 0;
+            const flrAreaByKey = new Map();
 
             if (Array.isArray(flrItems) && flrItems.length > 0) {
                 flrItems.forEach(f => {
@@ -14589,20 +14597,37 @@
                     flrUsageStrings += ' ' + pStr;
 
                     const isSub = (gb === '10' || gbNm.includes('지하'));
-                    const isGrnd = (gb === '20' || gbNm.includes('지상') || (!isSub && !gbNm.includes('옥탑')));
+                    const isRoof = (gb === '30' || gbNm.includes('옥탑'));
+                    const isGrnd = !isSub && !isRoof;
 
+                    if (!isRoof && flrNo > 0) {
+                        const flrKey = `${isSub ? 'B' : 'F'}${flrNo}`;
+                        flrAreaByKey.set(flrKey, (flrAreaByKey.get(flrKey) || 0) + area);
+                    }
                     if (isSub) {
                         subAreaSum += area;
-                        if (area > maxSubArea) maxSubArea = area;
-                        if (area > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = area;
-                        if (/주차|차고/.test(pStr)) hasParkingSub = true;
+                        if (/주차|차고/.test(pStr)) {
+                            hasParkingSub = true;
+                            subParkingAreaSum += area;
+                        }
                     } else if (isGrnd) {
-                        if (flrNo >= 4 && area > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = area;
                         if (flrNo === 1 || flrNo === 2) flr12AreaSum += area;
                         if (flrNo >= 11) flr11PlusAreaSum += area;
                     }
                     if (/주차|차고/.test(pStr)) parkingAreaSum += area;
                     if (/전기실|발전실|변전실|축전지|통신기기|전산실/.test(pStr)) elecRoomAreaSum += area;
+                });
+                flrAreaByKey.forEach((sumArea, flrKey) => {
+                    if (flrKey.startsWith('B')) {
+                        if (sumArea > maxSubArea) maxSubArea = sumArea;
+                        if (sumArea > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = sumArea;
+                    } else if (flrKey.startsWith('F')) {
+                        const num = parseFloat(flrKey.slice(1)) || 0;
+                        if (num >= 4) {
+                            if (sumArea > maxGrnd4PlusArea) maxGrnd4PlusArea = sumArea;
+                            if (sumArea > maxFlr4PlusOrSubArea) maxFlr4PlusOrSubArea = sumArea;
+                        }
+                    }
                 });
             } else {
                 const estFlr = archArea > 0 ? archArea : (totArea > 0 && totalFlrCnt > 0 ? (totArea / totalFlrCnt) : 0);
@@ -14610,44 +14635,114 @@
                     subAreaSum = estFlr * ugrndFlr;
                     maxSubArea = estFlr;
                 }
+                if (grndFlr >= 4) maxGrnd4PlusArea = estFlr;
                 if (grndFlr >= 4 || ugrndFlr >= 1) maxFlr4PlusOrSubArea = estFlr;
                 if (grndFlr >= 1) flr12AreaSum = estFlr * Math.min(2, grndFlr);
                 if (grndFlr >= 11) flr11PlusAreaSum = estFlr * (grndFlr - 10);
             }
 
-            const rawPurps = `${it.mainPurpsCdNm || ''} ${it.etcPurps || ''} ${bldNameHint || ''} ${it.bldNm || ''} ${ledgerType || ''} ${flrUsageStrings}`.trim();
-            const fullCtx = `${rawPurps} ${combinedContext || ''}`;
+            // 건축물대장 표제부 주용도 최우선 단일 분류 (다중 동 필지 건물명·부속층 용도 오염 방지)
+            const primaryPurpsStr = String(it.mainPurpsCdNm || '').trim();
+            const etcPurpsStr = String(it.etcPurps || '').trim();
+            const ledgerTypeStr = String(ledgerType || '').trim();
+            const subPurps = `${primaryPurpsStr} ${etcPurpsStr} ${flrUsageStrings}`.trim();
+            const fullCtx = `${subPurps} ${bldNameHint || ''} ${it.bldNm || ''} ${combinedContext || ''}`.trim();
 
-            const isApt = /아파트/.test(rawPurps);
-            const isRowMulti = /연립주택|연립|다세대주택|다세대/.test(rawPurps) && !isApt;
-            const isDorm = /기숙사/.test(rawPurps);
-            const isJointHouse = isApt || isRowMulti || isDorm || /공동주택/.test(rawPurps);
-            const isComm = /근린생활|제1종근린|제2종근린|근생/.test(rawPurps);
-            const isCulture = /문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장/.test(rawPurps);
-            const isReligion = /종교시설|종교|교회|성당|사찰/.test(rawPurps);
-            const isSales = /판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(rawPurps);
-            const isTransport = /운수시설|여객자동차|철도시설|공항시설|항만시설/.test(rawPurps);
-            const isMedical = /의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(rawPurps);
-            const isEdu = /교육연구|학교|교육원|직업훈련소|학원|연구소|도서관/.test(rawPurps);
-            const isElderly = /노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(rawPurps);
-            const isTraining = /수련시설|청소년수련|유스호스텔/.test(rawPurps);
-            const isSports = /운동시설|체육관|운동장/.test(rawPurps);
-            const isOffice = /업무시설|오피스텔|청사|사무소|오피스/.test(rawPurps);
-            const isOfficetel = /오피스텔/.test(fullCtx);
-            const isLodging = /숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도/.test(rawPurps);
-            const isAmusement = /위락시설|단란주점|유흥주점|무도장|카지노/.test(rawPurps);
-            const isFactory = /공장/.test(rawPurps);
-            const isWarehouse = /창고시설|창고|하역장|물류터미널|집배송/.test(rawPurps);
-            const isAuto = /자동차|주차장|차고|정비공장/.test(rawPurps);
-            const isFuneral = /장례/.test(rawPurps);
-            const isBroadcast = /방송통신|방송국|데이터센터/.test(rawPurps);
-            const isPower = /발전시설|전기저장/.test(rawPurps);
+            const detectPrimaryCategory = (str) => {
+                const s = String(str || '').trim();
+                if (!s) return '';
+                if (/공동주택|아파트|연립주택|연립|다세대주택|다세대|기숙사/.test(s)) return 'apt';
+                if (/숙박시설|호텔|여관|모텔|여인숙|호스텔|휴양콘도|생활숙박/.test(s)) return 'lodging';
+                if (/근린생활|제1종근린|제2종근린|근생|휴게음식점|일반음식점/.test(s)) return 'comm';
+                if (/의료시설|병원|종합병원|요양병원|치과병원|한방병원|정신의료|격리병원|재활시설/.test(s)) return 'medical';
+                if (/노유자|아동관련|노인복지|어린이집|유치원|요양원|주야간보호|장애인/.test(s)) return 'elderly';
+                if (/문화 및 집회|문화집회|공연장|집회장|관람장|전시장|영화상영관|극장|예식장|동물원|식물원/.test(s)) return 'culture';
+                if (/종교시설|종교|교회|성당|사찰/.test(s)) return 'religion';
+                if (/운동시설|체육관|운동장/.test(s)) return 'sports';
+                if (/판매시설|판매|백화점|쇼핑센터|대형마트|시장|상점/.test(s)) return 'sales';
+                if (/운수시설|여객자동차|철도시설|공항시설|항만시설/.test(s)) return 'transport';
+                if (/교육연구|학교|교육원|직업훈련소|학원|연구소|도서관/.test(s)) return 'edu';
+                if (/수련시설|생활권수련|자연권수련|유스호스텔/.test(s)) return 'training';
+                if (/업무시설|오피스텔|청사|사무소|오피스/.test(s)) return 'office';
+                if (/창고시설|창고|하역장|물류터미널|집배송/.test(s)) return 'warehouse';
+                if (/위락시설|단란주점|유흥주점|무도장|무도학원|카지노/.test(s)) return 'amusement';
+                if (/공장/.test(s)) return 'factory';
+                if (/자동차관련|주차장|주차타워|주차용|차고|세차장|정비공장/.test(s)) return 'auto';
+                if (/단독주택|다가구주택|다중주택/.test(s)) return 'detached';
+                if (/위험물/.test(s)) return 'hazmat';
+                if (/방송통신/.test(s)) return 'broadcast';
+                if (/발전시설|전기저장/.test(s)) return 'power';
+                if (/관광휴게/.test(s)) return 'tourism';
+                if (/장례시설|장례식장/.test(s)) return 'funeral';
+                if (/동물 및 식물|동식물|축사/.test(s)) return 'animal';
+                if (/자원순환|분뇨|쓰레기/.test(s)) return 'recycle';
+                if (/교정 및 군사|군사시설|교도소|구치소|소년원|유치장/.test(s)) return 'military';
+                if (/묘지관련/.test(s)) return 'cemetery';
+                return '';
+            };
+
+            const hasExplicitMainPurps = Boolean(primaryPurpsStr || etcPurpsStr);
+            const primaryCat =
+                detectPrimaryCategory(primaryPurpsStr) ||
+                detectPrimaryCategory(etcPurpsStr) ||
+                detectPrimaryCategory(ledgerTypeStr) ||
+                (hasExplicitMainPurps ? '' : detectPrimaryCategory(`${bldNameHint || ''} ${flrUsageStrings}`));
+
+            // 단독주택(다가구·다중주택 포함)은 특정소방대상물 미해당
+            if (primaryCat === 'detached') {
+                return [];
+            }
+
+            const isJointHouse = (primaryCat === 'apt');
+            const isApt = isJointHouse && (/아파트/.test(subPurps) || (!/연립|다세대|기숙사/.test(subPurps) && grndFlr >= 5));
+            const isRowMulti = isJointHouse && /연립주택|연립|다세대주택|다세대/.test(subPurps) && !/아파트/.test(subPurps);
+            const isDorm = (isJointHouse || primaryCat === 'edu' || primaryCat === 'training') && /기숙사/.test(subPurps);
+            const isComm = (primaryCat === 'comm');
+            const isCulture = (primaryCat === 'culture');
+            const isReligion = (primaryCat === 'religion');
+            const isSales = (primaryCat === 'sales');
+            const isTransport = (primaryCat === 'transport');
+            const isMedical = (primaryCat === 'medical');
+            const isEdu = (primaryCat === 'edu');
+            const isElderly = (primaryCat === 'elderly');
+            const isTraining = (primaryCat === 'training');
+            const isSports = (primaryCat === 'sports');
+            const isOffice = (primaryCat === 'office');
+            const isOfficetel = /오피스텔/.test(subPurps);
+            const isLodging = (primaryCat === 'lodging');
+            const isAmusement = (primaryCat === 'amusement');
+            const isFactory = (primaryCat === 'factory');
+            const isWarehouse = (primaryCat === 'warehouse');
+            const isLogisticsOrDelivery = isWarehouse && /물류터미널|집배송/.test(subPurps);
+            const isLogisticsTerminal = isWarehouse && /물류터미널/.test(subPurps);
+            const isAuto = (primaryCat === 'auto');
+            const isHazmat = (primaryCat === 'hazmat');
+            const isGasFacility = isHazmat && /가스/.test(subPurps);
+            const isAnimal = (primaryCat === 'animal');
+            const isBarn = isAnimal && /축사/.test(subPurps);
+            const isRecycle = (primaryCat === 'recycle');
+            const isMilitary = (primaryCat === 'military');
+            const isDefenseFacility = isMilitary && /국방|군사/.test(subPurps);
+            const isBroadcast = (primaryCat === 'broadcast');
+            const isPower = (primaryCat === 'power');
+            const isEssFacility = isPower && /전기저장|에너지저장|\bESS\b/i.test(fullCtx);
+            const isCemetery = (primaryCat === 'cemetery');
+            const isTourism = (primaryCat === 'tourism');
+            const isFuneral = (primaryCat === 'funeral');
+            const isUndergroundMall = /지하상가|지하가/.test(`${primaryPurpsStr} ${etcPurpsStr}`) && !/터널/.test(subPurps);
+            const isTraditionalMarket = isSales && /전통시장/.test(fullCtx);
 
             // 용도별 기준치 분류 (PDF 1~33쪽 기준)
-            const is1500HydrantGroup = (isComm || isSales || isTransport || isMedical || isElderly || isOffice || isLodging || isAmusement || isFactory || isWarehouse || isAuto || isBroadcast || isPower || isFuneral);
+            const is1500HydrantGroup = (isComm || isSales || isTransport || isMedical || isElderly || isOffice || isLodging || isAmusement || isFactory || isWarehouse || isAuto || isDefenseFacility || isBroadcast || isPower || isFuneral);
             const is600FireAlarmGroup = (isComm || isMedical || isLodging || isAmusement || isFuneral);
-            const is2000FireAlarmGroup = (isEdu || isTraining);
-            const isSmokeSub1000Group = (isComm || isSales || isTransport || isMedical || isElderly || isLodging || isAmusement || (/물류터미널/.test(fullCtx)));
+            const is2000FireAlarmGroup = (isEdu || isTraining || isAnimal || isRecycle || (isMilitary && !isDefenseFacility) || isCemetery);
+            const isSmokeSub1000Group = (isComm || isSales || isTransport || isMedical || isElderly || isLodging || isAmusement || isLogisticsTerminal || isUndergroundMall);
+            const hasVisualAlarm = (
+                isComm || isCulture || isReligion || isSales || isTransport || isMedical ||
+                (isEdu && /도서관/.test(subPurps)) || isElderly || isTraining || isSports ||
+                isOffice || isLodging || isAmusement || isLogisticsTerminal ||
+                (isBroadcast && /방송국/.test(subPurps)) || isPower || isFuneral || isUndergroundMall
+            );
 
             const groups = [
                 { key: 'extinguish', icon: '🧯', title: '소화설비', items: [] },
@@ -14665,93 +14760,139 @@
             };
 
             // 1. 소화설비
-            if (totArea >= 33 || totArea === 0) {
-                const kNote = (/음식점|주방|기숙사|호텔|의료|노유자|장례|학교|공장/.test(fullCtx)) ? ' (주방 K급 소화기 포함)' : '';
-                addItem('extinguish', '소화기구', `연면적 33㎡ 이상 적용${kNote}`);
+            if (isEssFacility || isGasFacility || totArea >= 33 || totArea === 0) {
+                const kNote = (/음식점|주방|기숙사|호텔|의료|노유자|장례|학교|공장/.test(subPurps)) ? ' (주방 K급 소화기 포함)' : '';
+                const extReason = isEssFacility ? '전기저장시설 면적 무관 적용' : (isGasFacility ? '위험물 가스시설 적용' : `연면적 33㎡ 이상 적용${kNote}`);
+                addItem('extinguish', '소화기구', extReason);
             }
-            if ((isApt && ymd >= 20040530) || (isApt && grndFlr >= 11 && ymd >= 19940720) || (isOfficetel && (ymd >= 20221201 || grndFlr >= 30))) {
-                addItem('extinguish', '자동소화장치', isOfficetel ? '오피스텔 각 실별 주방 적용' : '아파트 각 세대별 주방 적용');
+            if ((isApt && ymd >= 20040530) || (isApt && grndFlr >= 11 && ymd >= 19940720)) {
+                addItem('extinguish', '자동소화장치', '아파트 각 세대별 주방 적용');
+            } else if (isOfficetel && (ymd >= 20221201 || grndFlr >= 30)) {
+                addItem('extinguish', '자동소화장치', grndFlr >= 30 ? "오피스텔 30층 이상 전층 각 실별 주방 ('13.2.5 소급)" : "('22.12.1) 오피스텔 모든 층 각 실별 주방");
+            } else if (isEdu && /집단급식/.test(subPurps) && ymd >= 20231201) {
+                addItem('extinguish', '자동소화장치', "('23.12.1) 집단급식소 상업용 주방자동소화장치");
             }
-            if (is1500HydrantGroup) {
-                if (totArea >= 1500) addItem('extinguish', '옥내소화전설비', `연면적 1,500㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)`);
-                else if (maxFlr4PlusOrSubArea >= 300) addItem('extinguish', '옥내소화전설비', `지하층·4층 이상 층 바닥면적 300㎡ 이상 (최대 ${Math.round(maxFlr4PlusOrSubArea).toLocaleString()}㎡) 모든 층`);
-            } else {
-                if (totArea >= 3000) addItem('extinguish', '옥내소화전설비', `연면적 3,000㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)`);
-                else if (maxFlr4PlusOrSubArea >= 600) addItem('extinguish', '옥내소화전설비', `지하층·4층 이상 층 바닥면적 600㎡ 이상 (최대 ${Math.round(maxFlr4PlusOrSubArea).toLocaleString()}㎡) 모든 층`);
+            if (!isGasFacility) {
+                const hydrantAreaCheck = isBarn ? maxGrnd4PlusArea : maxFlr4PlusOrSubArea;
+                if (is1500HydrantGroup) {
+                    if (totArea >= 1500) addItem('extinguish', '옥내소화전설비', `('92.7.28) 연면적 1,500㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)`);
+                    else if (hydrantAreaCheck >= 300) addItem('extinguish', '옥내소화전설비', `지하층·무창층·4층 이상 층 바닥면적 300㎡ 이상 (최대 ${Math.round(hydrantAreaCheck).toLocaleString()}㎡) 모든 층`);
+                } else {
+                    if (totArea >= 3000) addItem('extinguish', '옥내소화전설비', `('92.7.28) 연면적 3,000㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)`);
+                    else if (hydrantAreaCheck >= 600) addItem('extinguish', '옥내소화전설비', `지하층·무창층·4층 이상 층 바닥면적 600㎡ 이상 (최대 ${Math.round(hydrantAreaCheck).toLocaleString()}㎡) 모든 층`);
+                }
             }
             if (spEval && spEval.text) {
                 const spLabel = spEval.text.includes('간이') ? '간이스프링클러설비' : '스프링클러설비';
                 addItem('extinguish', spLabel, `${spEval.text} ${spEval.detail || ''}`.trim());
             }
-            if (parkingAreaSum >= 200 || (isAuto && totArea >= 800)) {
-                addItem('extinguish', '물분무등소화설비', parkingAreaSum >= 200 ? `내부 차고·주차장 용도 면적 200㎡ 이상 (${Math.round(parkingAreaSum).toLocaleString()}㎡)` : '차고·주차용 건축물 연면적 800㎡ 이상');
-            } else if (elecRoomAreaSum >= 300) {
-                addItem('extinguish', '물분무등소화설비', `전기실·발전실·변전실·통신기기실 바닥면적 300㎡ 이상 (${Math.round(elecRoomAreaSum).toLocaleString()}㎡)`);
-            }
-            if (flr12AreaSum >= 9000) {
-                addItem('extinguish', '옥외소화전설비', `지상 1~2층 바닥면적 합계 9,000㎡ 이상 (${Math.round(flr12AreaSum).toLocaleString()}㎡)`);
+            if (!isGasFacility) {
+                if (parkingAreaSum >= 200 || (isAuto && totArea >= 800)) {
+                    addItem('extinguish', '물분무등소화설비', parkingAreaSum >= 200 ? `내부 차고·주차장 용도 면적 200㎡ 이상 (${Math.round(parkingAreaSum).toLocaleString()}㎡)` : '차고·주차용 건축물 연면적 800㎡ 이상');
+                } else if (elecRoomAreaSum >= 300) {
+                    addItem('extinguish', '물분무등소화설비', `전기실·발전실·변전실·통신기기실 바닥면적 300㎡ 이상 (${Math.round(elecRoomAreaSum).toLocaleString()}㎡)`);
+                }
+                if (flr12AreaSum >= 9000) {
+                    addItem('extinguish', '옥외소화전설비', `지상 1~2층 바닥면적 합계 9,000㎡ 이상 (${Math.round(flr12AreaSum).toLocaleString()}㎡)`);
+                }
             }
 
             // 2. 경보설비
-            if (isRowMulti && ymd >= 20241201) {
-                addItem('alarm', '단독경보형감지기', `('24.12.1) 연립·다세대주택 연동형 설치`);
-            } else if (isElderly && /유치원/.test(fullCtx) && totArea < 400) {
-                addItem('alarm', '단독경보형감지기', '연면적 400㎡ 미만 유치원 적용');
-            }
-            if (totArea >= 400 || maxSubArea >= 150) {
-                addItem('alarm', '비상경보설비', totArea >= 400 ? `연면적 400㎡ 이상 모든 층 (${Math.round(totArea).toLocaleString()}㎡)` : `지하층 바닥면적 150㎡ 이상 모든 층 (${Math.round(maxSubArea).toLocaleString()}㎡)`);
+            if (!isGasFacility) {
+                if (isRowMulti && ymd >= 20241201) {
+                    addItem('alarm', '단독경보형감지기', `('24.12.1) 연립·다세대주택 연동형 설치`);
+                } else if (isElderly && /유치원/.test(subPurps) && totArea > 0 && totArea < 400) {
+                    addItem('alarm', '단독경보형감지기', `('18.6.27) 연면적 400㎡ 미만 유치원 적용`);
+                } else if ((isEdu || isTraining) && /기숙사|합숙소/.test(subPurps) && totArea > 0 && totArea < 2000) {
+                    addItem('alarm', '단독경보형감지기', '기숙사·합숙소 연면적 2,000㎡ 미만 적용');
+                } else if (hasParkingSub && subParkingAreaSum > 0 && subParkingAreaSum < 200 && ymd >= 20260301) {
+                    addItem('alarm', '단독경보형감지기', `('26.3.1) 지하 차고·주차장 200㎡ 미만 부분`);
+                }
+                if (totArea >= 400 || maxSubArea >= 150 || (hasParkingSub && subParkingAreaSum > 0 && subParkingAreaSum < 200 && ymd >= 20260301)) {
+                    const emAlarmReason = totArea >= 400
+                        ? `연면적 400㎡ 이상 모든 층 (${Math.round(totArea).toLocaleString()}㎡)`
+                        : (maxSubArea >= 150 ? `지하층 바닥면적 150㎡ 이상 모든 층 (${Math.round(maxSubArea).toLocaleString()}㎡)` : `('26.3.1) 지하 차고·주차장 200㎡ 미만 모든 층`);
+                    addItem('alarm', '비상경보설비', emAlarmReason);
+                }
             }
             const zataReasons = [];
+            if (isEssFacility) zataReasons.push('발전시설 중 전기저장시설 전체 적용');
+            if (isLodging && ymd >= 20221201) zataReasons.push(`('22.12.1) 숙박시설 모든 층`);
             if (grndFlr >= 6 && ymd >= 20221201) zataReasons.push(`('22.12.1) 층수 6층 이상 모든 층`);
             if (isApt && ymd >= 20221201) zataReasons.push(`('22.12.1) 아파트등 모든 층`);
-            else if (isJointHouse && ((grndFlr >= 4 && totArea >= 1000) || totArea >= 500)) zataReasons.push('공동주택 연면적 기준(500㎡/4층이상 1,000㎡ 이상)');
-            else if (isElderly && (totArea >= 400 || /요양원|생활시설/.test(fullCtx))) zataReasons.push('노유자시설 연면적 400㎡ 이상/생활시설');
-            else if (is600FireAlarmGroup && totArea >= 600) zataReasons.push(`연면적 600㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
+            else if (isJointHouse && ((grndFlr >= 4 && totArea >= 1000) || totArea >= 500)) zataReasons.push('공동주택 연면적 기준(500㎡/4층 이상 1,000㎡ 이상)');
+            else if (isElderly && (totArea >= 400 || /요양원|생활시설|거주시설/.test(subPurps))) zataReasons.push("노유자시설 연면적 400㎡ 이상 또는 노유자생활시설 ('14.2.4 소급)");
+            else if (isMedical && (/요양병원/.test(subPurps) || (/정신의료|정신병원|의료재활/.test(subPurps) && totArea >= 300))) zataReasons.push('요양병원 전체 또는 정신의료·재활시설 300㎡ 이상');
+            else if (isComm && /조산원|산후조리원/.test(subPurps) && ymd >= 20210824) zataReasons.push("('21.8.24) 조산원·산후조리원 적용");
+            else if (isTraditionalMarket) zataReasons.push('판매시설 중 전통시장 적용');
+            else if (isComm && /목욕장|목욕탕|사우나/.test(subPurps) && totArea >= 1000) zataReasons.push(`근린생활시설(목욕탕) 연면적 1,000㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
+            else if (is600FireAlarmGroup && !(isComm && /목욕장|목욕탕|사우나/.test(subPurps)) && totArea >= 600) zataReasons.push(`('81.11.6) 연면적 600㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
             else if (is2000FireAlarmGroup && totArea >= 2000) zataReasons.push(`연면적 2,000㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
-            else if (!is600FireAlarmGroup && !is2000FireAlarmGroup && totArea >= 1000) zataReasons.push(`연면적 1,000㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
+            else if (!is600FireAlarmGroup && !is2000FireAlarmGroup && !isJointHouse && totArea >= 1000) zataReasons.push(`연면적 1,000㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
+            if (hasParkingSub && subParkingAreaSum >= 200 && ymd >= 20260301) zataReasons.push("('26.3.1) 지하 차고·주차장 200㎡ 이상 모든 층");
             if (zataReasons.length > 0) {
-                addItem('alarm', '자동화재탐지설비', zataReasons[0] + (ymd >= 20040530 && !isJointHouse ? ' (시각경보기 포함)' : ''));
+                addItem('alarm', '자동화재탐지설비', zataReasons[0] + (ymd >= 20040530 && hasVisualAlarm ? ' (시각경보기 포함)' : ''));
             }
-            if (totArea >= 3500 || grndFlr >= 11 || ugrndFlr >= 3) {
+            if (isTraditionalMarket && ymd >= 20231201) {
+                addItem('alarm', '화재알림설비', "('23.12.1) 판매시설 중 전통시장 적용");
+            }
+            if (!isGasFacility && (totArea >= 3500 || grndFlr >= 11 || ugrndFlr >= 3)) {
                 const brReasons = [];
                 if (totArea >= 3500) brReasons.push(`연면적 3,500㎡ 이상 (${Math.round(totArea).toLocaleString()}㎡)`);
                 if (grndFlr >= 11) brReasons.push(`층수 11층 이상 (지상 ${grndFlr}층)`);
                 if (ugrndFlr >= 3) brReasons.push(`지하층 3층 이상 (지하 ${ugrndFlr}층)`);
                 addItem('alarm', '비상방송설비', brReasons.join(' / '));
             }
-            if ((isMedical && (ymd >= 20190806 || /요양병원/.test(fullCtx))) || (isElderly && (totArea >= 500 || /요양원|생활시설/.test(fullCtx))) || (/조산원|산후조리원/.test(fullCtx)) || (/의원|치과|한의원/.test(fullCtx) && /입원/.test(fullCtx))) {
-                addItem('alarm', '자동화재속보설비', '의료·노유자·조산원/산후조리원·입원실 의원 적용 대상');
+            if (
+                (isMedical && (ymd >= 20190806 || /요양병원/.test(subPurps) || (/정신병원|정신의료|의료재활/.test(subPurps) && totArea >= 500))) ||
+                (isElderly && (totArea >= 500 || /요양원|생활시설|거주시설/.test(subPurps))) ||
+                (isComm && /조산원|산후조리원/.test(subPurps) && ymd >= 20210824) ||
+                (isComm && /의원|치과|한의원/.test(subPurps) && /입원/.test(subPurps) && ymd >= 20190806) ||
+                (isTraditionalMarket && ymd >= 20180627) ||
+                (isTraining && /유스호스텔|수련원|숙박/.test(subPurps) && totArea >= 500)
+            ) {
+                addItem('alarm', '자동화재속보설비', '의료·노유자·전통시장·숙박수련·조산원/산후조리원·입원실 의원 적용 대상');
+            }
+            if (isFactory && ymd >= 20260301) {
+                addItem('alarm', '가스누설경보기', "('26.3.1) 공장 적용");
             }
 
             // 3. 피난구조설비
-            if (isElderly && grndFlr >= 1) {
-                addItem('evac', '피난기구', '지상 1층~10층 설치 (피난층 제외, 완강기 제외·구조대 적용)');
-            } else if (grndFlr >= 3) {
-                const airMatNote = (isJointHouse && hhldCnt >= 150) ? ' + 150세대 이상 공기안전매트 설치' : '';
-                addItem('evac', '피난기구', `지상 3층~10층 설치 (피난층 제외)${airMatNote}`);
+            if (!isGasFacility) {
+                if (isElderly && grndFlr >= 1) {
+                    addItem('evac', '피난기구', "('17.6.7) 지상 1층~10층 설치 (피난층 제외, 완강기 제외·구조대 적용)");
+                } else if (grndFlr >= 3) {
+                    const airMatNote = (isJointHouse && hhldCnt >= 150) ? ' + 150세대 이상 공기안전매트 설치' : '';
+                    const lodgNote = isLodging ? ' (객실별 완강기/간이완강기 추가)' : '';
+                    addItem('evac', '피난기구', `지상 3층~10층 설치 (피난층 제외)${airMatNote}${lodgNote}`);
+                }
+                if (isMedical && totalFlrCnt >= 5) {
+                    addItem('evac', '인명구조기구', '지하 포함 5개층 이상 병원 (방열복/방화복·공기호흡기 각 2개 이상)');
+                } else if (isLodging && totalFlrCnt >= 7 && /호텔/.test(fullCtx)) {
+                    addItem('evac', '인명구조기구', '지하 포함 7층 이상 관광호텔 (방열복·공기호흡기·인공소생기 각 2개 이상)');
+                } else if (isSales && totArea >= 3000) {
+                    addItem('evac', '인명구조기구', '대규모점포 해당 시 층마다 공기호흡기 2개 이상 비치');
+                }
             }
-            if (isMedical && totalFlrCnt >= 5) {
-                addItem('evac', '인명구조기구', '지하 포함 5개층 이상 병원 (방열복/방화복·공기호흡기 각 2개 이상)');
-            } else if (isLodging && totalFlrCnt >= 7 && /호텔/.test(fullCtx)) {
-                addItem('evac', '인명구조기구', '지하 포함 7층 이상 관광호텔 (방열복·공기호흡기·인공소생기 각 2개 이상)');
-            } else if (isSales && totArea >= 3000) {
-                addItem('evac', '인명구조기구', '대규모점포 해당 시 층마다 공기호흡기 2개 이상 비치');
-            }
-            const guideSize = isApt ? '아파트 소형유도등' : ((isCulture || isReligion || isSales || isMedical || isSports || isAmusement || isBroadcast || isFuneral) ? '대형유도등 적용' : (isOffice ? '중형유도등 적용' : '적용'));
+            const guideSize = isApt ? '아파트 소형유도등' : ((isCulture || isReligion || isSales || isMedical || isSports || isAmusement || isBroadcast || isFuneral || isUndergroundMall) ? '대형유도등 적용' : (isOffice ? '중형유도등 적용' : '적용'));
             addItem('evac', '유도등', guideSize);
-            if ((totalFlrCnt >= 5 && totArea >= 3000) || maxSubArea >= 450) {
-                const emReasons = [];
-                if (totalFlrCnt >= 5 && totArea >= 3000) emReasons.push(`지하 포함 5개층 이상 & 연면적 3,000㎡ 이상 (${totalFlrCnt}개층, ${Math.round(totArea).toLocaleString()}㎡)`);
-                if (maxSubArea >= 450) emReasons.push(`지하층 바닥면적 450㎡ 이상 (${Math.round(maxSubArea).toLocaleString()}㎡)`);
-                addItem('evac', '비상조명등', emReasons.join(' / '));
+            if (!isGasFacility && (!isWarehouse || isLogisticsOrDelivery)) {
+                if ((totalFlrCnt >= 5 && totArea >= 3000) || maxSubArea >= 450) {
+                    const emReasons = [];
+                    if (totalFlrCnt >= 5 && totArea >= 3000) emReasons.push(`지하 포함 5개층 이상 & 연면적 3,000㎡ 이상 (${totalFlrCnt}개층, ${Math.round(totArea).toLocaleString()}㎡)`);
+                    if (maxSubArea >= 450) emReasons.push(`지하층 바닥면적 450㎡ 이상 (${Math.round(maxSubArea).toLocaleString()}㎡)`);
+                    addItem('evac', '비상조명등', emReasons.join(' / '));
+                }
             }
             if (isLodging) {
-                addItem('evac', '휴대용비상조명등', '객실 또는 구획된 실마다 1개 이상 (복도 비상조명등 설치 시 제외)');
+                addItem('evac', '휴대용비상조명등', "('02.3.30) 객실 또는 구획된 실마다 1개 이상 (복도 비상조명등 설치 시 제외)");
+            } else if (isUndergroundMall) {
+                addItem('evac', '휴대용비상조명등', "('04.5.30) 지하상가 보행거리 25m 이내마다 3개 이상 설치");
             }
 
             // 4. 소화용수설비
-            if (totArea >= 5000) {
-                addItem('water', '상수도소화용수설비', `연면적 5,000㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)`);
+            if (!isGasFacility && (totArea >= 5000 || (isRecycle && /폐기물재활용|폐기물처분/.test(subPurps)))) {
+                addItem('water', '상수도소화용수설비', totArea >= 5000 ? `연면적 5,000㎡ 이상 (현재 ${Math.round(totArea).toLocaleString()}㎡)` : '폐기물재활용·처분시설 적용');
             }
 
             // 5. 소화활동설비 (제연설비, 연결송수관설비, 연결살수설비, 비상콘센트설비, 무선통신보조설비)
@@ -14773,41 +14914,44 @@
                 addItem('activity', '제연설비', smokeReasons.join(' / '));
             }
 
-            const standpipeReasons = [];
-            if (grndFlr >= 5 && totArea >= 6000) standpipeReasons.push(`5층 이상 & 연면적 6,000㎡ 이상 (${grndFlr}층, ${Math.round(totArea).toLocaleString()}㎡)`);
-            if (totalFlrCnt >= 7) standpipeReasons.push(`지하층 포함 7개층 이상 모든 층 (총 ${totalFlrCnt}개층)`);
-            if (ugrndFlr >= 3 && subAreaSum >= 1000) standpipeReasons.push('지하 3개층 이상 & 지하층 바닥합 1,000㎡ 이상');
-            if (standpipeReasons.length > 0) {
-                addItem('activity', '연결송수관설비', standpipeReasons.join(' / '));
-            }
+            if (!isGasFacility) {
+                const standpipeReasons = [];
+                if (grndFlr >= 5 && totArea >= 6000) standpipeReasons.push(`5층 이상 & 연면적 6,000㎡ 이상 (${grndFlr}층, ${Math.round(totArea).toLocaleString()}㎡)`);
+                if (totalFlrCnt >= 7) standpipeReasons.push(`지하층 포함 7개층 이상 모든 층 (총 ${totalFlrCnt}개층)`);
+                if (ugrndFlr >= 3 && subAreaSum >= 1000) standpipeReasons.push('지하 3개층 이상 & 지하층 바닥합 1,000㎡ 이상');
+                if (standpipeReasons.length > 0) {
+                    addItem('activity', '연결송수관설비', standpipeReasons.join(' / '));
+                }
 
-            const sprinkleConnReasons = [];
-            if ((isSales || isTransport) && totArea >= 1000) sprinkleConnReasons.push('판매·운수시설 바닥면적 합계 1,000㎡ 이상');
-            if (isJointHouse || isEdu) {
-                if (subAreaSum >= 700) sprinkleConnReasons.push(`지하층 바닥면적 700㎡ 이상 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
-            } else {
-                if (subAreaSum >= 150) sprinkleConnReasons.push(`지하층 바닥면적 합계 150㎡ 이상 지하 모든 층 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
-            }
-            if (hasParkingSub && parkingAreaSum > 0 && parkingAreaSum < 200 && ymd >= 20260301) {
-                sprinkleConnReasons.push(`('26.3.1) 지하 차고·주차장 200㎡ 미만`);
-            }
-            if (sprinkleConnReasons.length > 0) {
-                addItem('activity', '연결살수설비', sprinkleConnReasons.join(' / '));
-            }
+                const sprinkleConnReasons = [];
+                if ((isSales || isTransport || isLogisticsTerminal) && totArea >= 1000) sprinkleConnReasons.push('판매·운수·물류터미널 바닥면적 합계 1,000㎡ 이상');
+                if (isJointHouse || isEdu) {
+                    if (subAreaSum >= 700) sprinkleConnReasons.push(`지하층 바닥면적 700㎡ 이상 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
+                } else {
+                    if (subAreaSum >= 150) sprinkleConnReasons.push(`지하층 바닥면적 합계 150㎡ 이상 지하 모든 층 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
+                }
+                if (hasParkingSub && subParkingAreaSum > 0 && subParkingAreaSum < 200 && ymd >= 20260301) {
+                    sprinkleConnReasons.push(`('26.3.1) 지하 차고·주차장 200㎡ 미만`);
+                }
+                if (sprinkleConnReasons.length > 0) {
+                    addItem('activity', '연결살수설비', sprinkleConnReasons.join(' / '));
+                }
 
-            const outletReasons = [];
-            if (grndFlr >= 11) outletReasons.push(`층수 11층 이상은 11층 이상 층 (지상 ${grndFlr}층)`);
-            if (ugrndFlr >= 3 && subAreaSum >= 1000) outletReasons.push('지하 3개층 이상 & 지하 바닥합 1,000㎡ 이상 지하 모든 층');
-            if (outletReasons.length > 0) {
-                addItem('activity', '비상콘센트설비', outletReasons.join(' / '));
-            }
+                const outletReasons = [];
+                if (grndFlr >= 11) outletReasons.push(`층수 11층 이상은 11층 이상 층 (지상 ${grndFlr}층)`);
+                if (ugrndFlr >= 3 && subAreaSum >= 1000) outletReasons.push('지하 3개층 이상 & 지하 바닥합 1,000㎡ 이상 지하 모든 층');
+                if (outletReasons.length > 0) {
+                    addItem('activity', '비상콘센트설비', outletReasons.join(' / '));
+                }
 
-            const radioReasons = [];
-            if (subAreaSum >= 3000) radioReasons.push(`지하층 바닥면적 합계 3,000㎡ 이상 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
-            if (grndFlr >= 30) radioReasons.push(`30층 이상은 16층 이상 모든 층 (지상 ${grndFlr}층)`);
-            if (ugrndFlr >= 3 && subAreaSum >= 1000) radioReasons.push('지하 3개층 이상 & 지하 바닥합 1,000㎡ 이상 지하 모든 층');
-            if (radioReasons.length > 0) {
-                addItem('activity', '무선통신보조설비', radioReasons.join(' / '));
+                const radioReasons = [];
+                if (isUndergroundMall && totArea >= 1000) radioReasons.push('지하상가 연면적 1,000㎡ 이상');
+                if (subAreaSum >= 3000) radioReasons.push(`지하층 바닥면적 합계 3,000㎡ 이상 (${Math.round(subAreaSum).toLocaleString()}㎡)`);
+                if (grndFlr >= 30) radioReasons.push(`30층 이상은 16층 이상 모든 층 (지상 ${grndFlr}층)`);
+                if (ugrndFlr >= 3 && subAreaSum >= 1000) radioReasons.push('지하 3개층 이상 & 지하 바닥합 1,000㎡ 이상 지하 모든 층');
+                if (radioReasons.length > 0) {
+                    addItem('activity', '무선통신보조설비', radioReasons.join(' / '));
+                }
             }
 
             // 6. 건축·방염 및 기타
@@ -14824,7 +14968,16 @@
             if (grndFlr >= 11 && flr11PlusAreaSum >= 10000) {
                 addItem('arch', '헬리포트', '11층 이상 중 11층 이상 층 바닥면적 합계 10,000㎡ 이상');
             }
-            if (isMedical || isElderly || isLodging || (isCulture && totArea >= 300) || (isReligion && totArea >= 300) || (isSports && totArea >= 500) || (isComm && /의원|체력단련|공연장|종교|조산원|산후조리원/.test(fullCtx))) {
+            if (
+                isMedical || isElderly || isLodging ||
+                (isCulture && totArea >= 300) ||
+                (isReligion && totArea >= 300) ||
+                (isSports && totArea >= 500 && !/수영장/.test(subPurps)) ||
+                (isEdu && /합숙소/.test(subPurps)) ||
+                (isTraining && /유스호스텔|수련원|숙박/.test(subPurps)) ||
+                (isBroadcast && /방송국|촬영소/.test(subPurps)) ||
+                (isComm && /의원|체력단련|공연장|종교|조산원|산후조리원/.test(subPurps))
+            ) {
                 addItem('arch', '방염 대상', '실내장식물 등 방염성능기준 적용 용도');
             }
 
