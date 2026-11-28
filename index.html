@@ -12780,7 +12780,13 @@
                 }
                 const isExplicitComplexName = /복합\s*건축물|주상\s*복합|복합\s*주거\s*시설|복합\s*시설|복합\s*건물/.test(`${bldNm} ${etcPurps} ${mainPurps}`);
                 const hasSingleHouseOnly = /단독주택|다가구|다중주택/.test(purpsPair) && !/공동주택|아파트|다세대|연립/.test(purpsPair);
-                if (!isSeparateAuxDong && !hasSingleHouseOnly && (isExplicitComplexName || ledgerMajorCats.size >= 2)) {
+                const mainPurpsCat = detectPdfFacilityCategory(mainPurps);
+                // 숙박·의료·종교·교육·노유자·공장·창고·업무 등 명확한 단일 주용도 건물에 1층 근린생활시설(약국·상가 등)이 섞인 경우는 주용도 그대로 유지
+                const isAptComplexMix = ledgerMajorCats.has('apt') && ledgerMajorCats.size >= 2;
+                const nonCommMajorCount = [...ledgerMajorCats].filter(c => c !== 'comm').length;
+                const isProtectedSingleMain = ['lodging', 'medical', 'religion', 'edu', 'elderly', 'factory', 'warehouse', 'sports', 'culture'].includes(mainPurpsCat);
+                const isLargeMultiUseComplex = !isProtectedSingleMain && totArea >= 5000 && ledgerMajorCats.size >= 3 && nonCommMajorCount >= 2;
+                if (!isSeparateAuxDong && !hasSingleHouseOnly && (isExplicitComplexName || isAptComplexMix || isLargeMultiUseComplex)) {
                     return '복합건축물';
                 }
 
@@ -14049,7 +14055,7 @@
                 .replace(/단지내\s*상가/g, '단지내상가')
                 .replace(/제\s*[12]\s*종\s*근린\s*생활\s*시설?/g, '근린생활시설')
                 .replace(/도시형\s*생활\s*주택/g, '도시형생활주택');
-            outsideParens.split(/[,/·ㆍ+\s]+|(?:\s*및\s*)/).filter(Boolean).forEach(addIfMajor);
+            outsideParens.split(/[,/·ㆍ+\s]+|(?:\s+및\s+)/).filter(Boolean).forEach(addIfMajor);
             // 2) 괄호 내부는 명시적 시설군 키워드(오피스텔·근린생활시설·업무시설 등)만 추출하여 '제2종근생(사무소)' 등 오탐 차단
             const parenMatches = cleanedRaw.match(/\(([^)]*)\)/g) || [];
             parenMatches.forEach(pm => {
@@ -15562,14 +15568,26 @@
         let lastRenderedBldQuery = '';
 
         function isApartmentForHallBadge(it, ledgerType, bldNm) {
-            const txt = `${it?.mainPurpsCdNm || ''} ${it?.etcPurps || ''} ${bldNm || ''}`;
-            if (/도시형생활주택|오피스텔|다세대|연립|다가구|단독주택/.test(txt) && ledgerType !== '아파트' && !/아파트/.test(txt)) {
-                return false;
-            }
-            if (ledgerType === '아파트' || /아파트/.test(txt)) return true;
+            const mainPurps = String(it?.mainPurpsCdNm || '').trim();
+            const etcPurps = String(it?.etcPurps || '').trim();
+            const dongNm = String(it?.dongNm || '').trim();
             const hhld = parseInt(it?.hhldCnt || '0', 10) || 0;
             const grnd = parseInt(it?.grndFlrCnt || '0', 10) || 0;
-            if (String(it?.mainPurpsCdNm || '').includes('공동주택') && (hhld >= 20 || grnd >= 5)) return true;
+
+            // 아파트 단지 내 상가·경비실·노인정·경로당·유치원·어린이집·관리동·부속동 등은 복도식/계단식 배지 제외
+            const auxDongExcludeRe = /상가|근린생활|근생|경비실|경비초소|수위실|노인정|경로당|유치원|어린이집|보육시설|관리동|관리사무소|관리실|주민공동시설|커뮤니티|도서관|문고|문주|주차장|기계실|전기실|펌프실|변전실|발전실|쓰레기|분리수거|창고|부대시설|복리시설|부대복리|부속동?|별동|체력단련|헬스|독서실|어린이놀이터|테니스|골프|매점|점포|복지관|회관/;
+            if (dongNm && auxDongExcludeRe.test(dongNm)) return false;
+            if (ledgerType && ledgerType !== '아파트' && ledgerType !== '복합건축물') return false;
+            if (mainPurps && !/공동주택|아파트/.test(mainPurps)) return false;
+            if (etcPurps && !/공동주택|아파트/.test(etcPurps) && auxDongExcludeRe.test(etcPurps)) return false;
+            if (hhld === 0 && grnd > 0 && grnd <= 3) return false;
+
+            const purpsTxt = `${mainPurps} ${etcPurps}`.trim();
+            if (/도시형생활주택|오피스텔|다세대|연립|다가구|단독주택/.test(purpsTxt) && ledgerType !== '아파트' && !/아파트/.test(purpsTxt)) {
+                return false;
+            }
+            if (ledgerType === '아파트' || /아파트/.test(purpsTxt)) return true;
+            if (mainPurps.includes('공동주택') && (hhld >= 20 || grnd >= 5)) return true;
             return false;
         }
 
